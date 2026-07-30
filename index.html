@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Retira — Portaria</title>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #161d2e;
+    --card-border: #232b3d;
+    --text: #eef1f7;
+    --text-muted: #8b93a7;
+    --accent: #ff6a2b;
+    --accent-text: #ffffff;
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.12);
+    --red: #f87171;
+    --input-bg: #0f1420;
+  }
+  [data-theme="light"] {
+    --bg: #f4f5f8;
+    --card: #ffffff;
+    --card-border: #e3e5ec;
+    --text: #1a1d29;
+    --text-muted: #6b7080;
+    --input-bg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+  .hidden { display: none !important; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--card-border);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo {
+    width: 42px; height: 42px; border-radius: 10px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+  }
+  .brand h1 { font-size: 17px; margin: 0; }
+  .brand p { font-size: 12px; margin: 2px 0 0; color: var(--text-muted); }
+  .header-right { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text-muted); }
+  .op-badge { background: var(--card); border: 1px solid var(--card-border); padding: 6px 12px; border-radius: 8px; }
+  button.icon-btn {
+    background: var(--card); border: 1px solid var(--card-border); color: var(--text);
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px;
+  }
+  nav.tabs { display: flex; gap: 24px; padding: 0 24px; border-bottom: 1px solid var(--card-border); }
+  nav.tabs button {
+    background: none; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600;
+    padding: 14px 2px; cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; }
+  .card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px;
+  }
+  .card .label { font-size: 12px; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
+  .card .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .row { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  input[type=text], input[type=password], input[type=date], select {
+    background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text);
+    padding: 12px 14px; border-radius: 8px; font-size: 14px; width: 100%;
+  }
+  .btn {
+    background: var(--accent); color: var(--accent-text); border: none; padding: 12px 18px;
+    border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap;
+  }
+  .btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--card-border); }
+  .section-title { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: 24px 0 12px; }
+  .badge-count { background: var(--card-border); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+  .list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--card-border); border-left: 3px solid var(--green);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+  }
+  .list-item .info b { font-size: 15px; }
+  .list-item .info div { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .time-pill { background: var(--green-bg); color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-right: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--card-border); }
+  td { padding: 12px; border-bottom: 1px solid var(--card-border); }
+  .pill { background: var(--card-border); padding: 3px 9px; border-radius: 6px; font-size: 12px; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex;
+    align-items: center; justify-content: center; z-index: 50; padding: 16px;
+  }
+  .modal { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; width: 100%; max-width: 400px; }
+  .modal h2 { margin-top: 0; font-size: 17px; }
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn { flex: 1; }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-card { width: 100%; max-width: 340px; text-align: center; }
+  .pin-dots { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
+  .pin-dots span { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--card-border); }
+  .pin-dots span.filled { background: var(--accent); border-color: var(--accent); }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .keypad button {
+    padding: 16px 0; font-size: 18px; border-radius: 10px; border: 1px solid var(--card-border);
+    background: var(--card); color: var(--text); cursor: pointer;
+  }
+  .admin-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--card-border); }
+  .admin-row .status { font-size: 12px; }
+  .status.ativo { color: var(--green); }
+  .status.inativo { color: var(--red); }
+  .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filters > * { flex: 1; min-width: 140px; }
+  @media (max-width: 700px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; gap: 10px; }
+    main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== TELA DE LOGIN (PIN) ===================== -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="brand" style="justify-content:center; margin-bottom:24px;">
+      <div class="logo">CD</div>
+      <div style="text-align:left">
+        <h1>Controle Retira</h1>
+        <p>Identifique-se com seu PIN</p>
+      </div>
+    </div>
+    <div class="pin-dots" id="pinDots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div id="loginError" class="error-msg hidden"></div>
+    <div class="keypad" id="keypad" style="margin-top:16px;"></div>
+    <div style="margin-top:16px;">
+      <button class="link-btn" onclick="entrarModoAdmin()">Acesso administrador</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP PRINCIPAL ===================== -->
+<div id="app" class="hidden">
+  <header>
+    <div class="brand">
+      <div class="logo">CD</div>
+      <div>
+        <h1>Controle Retira — Portaria</h1>
+        <p>Entrada e saída de clientes no CD</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="op-badge" id="liveClock" style="font-variant-numeric: tabular-nums; display:flex; align-items:center; gap:8px;">
+        <span>🕐</span><span id="clockTime">00:00:00</span><span id="clockDate" style="color:var(--text-muted); font-weight:400;"></span>
+      </span>
+      <span class="op-badge" id="operadorBadge">—</span>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="icon-btn" onclick="logout()">⎋</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button id="tabOperacaoBtn" class="active" onclick="mudarAba('operacao')">Operação</button>
+    <button id="tabIndicadoresBtn" onclick="mudarAba('indicadores')">Indicadores</button>
+  </nav>
+
+  <main>
+    <!-- ========== ABA OPERAÇÃO ========== -->
+    <section id="painelOperacao">
+      <div class="grid-2">
+        <div class="card">
+          <div class="label">No CD agora</div>
+          <div class="value" id="kpiNoCd" style="color:var(--accent)">0</div>
+        </div>
+        <div class="card">
+          <div class="label">Atendidos hoje</div>
+          <div class="value" id="kpiHoje">0</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" onclick="abrirModalNovo()">+ Novo Cliente</button>
+        <input type="text" id="buscaInput" placeholder="Buscar por nome ou pedido..." oninput="renderAtivos()">
+      </div>
+
+      <div class="section-title">Em atendimento <span class="badge-count" id="countAtivos">0</span></div>
+      <div id="listaAtivos"></div>
+
+      <div class="section-title" style="justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">Finalizados <span class="badge-count" id="countFinalizados">0</span></div>
+        <input type="text" id="buscaFinalizados" placeholder="Buscar por nome ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
+      </div>
+      <table>
+        <thead><tr><th>Nome</th><th>Pedido</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>Usuário Responsável</th></tr></thead>
+        <tbody id="tabelaFinalizados"></tbody>
+      </table>
+    </section>
+
+    <!-- ========== ABA INDICADORES ========== -->
+    <section id="painelIndicadores" class="hidden">
+      <div class="filters">
+        <select id="filtroMes"></select>
+        <input type="text" id="filtroNome" placeholder="Filtrar por nome" oninput="renderIndicadores()">
+        <input type="text" id="filtroPedido" placeholder="Filtrar por pedido" oninput="renderIndicadores()">
+        <input type="date" id="filtroDia" onchange="renderIndicadores()">
+      </div>
+
+      <div class="grid-kpi">
+        <div class="card"><div class="label">Atendidos no período</div><div class="value" id="kpiTotal">0</div></div>
+        <div class="card"><div class="label">No CD agora</div><div class="value" id="kpiAtual">0</div></div>
+        <div class="card"><div class="label">Tempo médio</div><div class="value" id="kpiMedio">-</div></div>
+        <div class="card"><div class="label">Maior tempo</div><div class="value" id="kpiMaior">-</div></div>
+        <div class="card"><div class="label">Menor tempo</div><div class="value" id="kpiMenor">-</div></div>
+        <div class="card"><div class="label">Médio por dia</div><div class="value" id="kpiMedioDia">-</div></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="label" style="margin-bottom:10px;">Tempo médio de permanência por dia</div>
+        <div id="chartPorDia"></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="label" style="margin-bottom:10px;">Entradas e saídas por usuário</div>
+        <div id="chartPorUsuario"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===================== MODAL: NOVO CLIENTE ===================== -->
+<div id="modalNovo" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Novo cliente</h2>
+    <div class="field"><label>Nome do cliente</label><input type="text" id="novoNome"></div>
+    <div class="field"><label>Número do cupom fiscal ou pedido</label><input type="text" id="novoPedido"></div>
+    <div id="novoErro" class="error-msg hidden"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="fecharModalNovo()">Cancelar</button>
+      <button class="btn" onclick="confirmarEntrada()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: REGISTRAR SAÍDA ===================== -->
+<div id="modalSaida" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Registrar saída</h2>
+    <div class="field">
+      <label>Retirada</label>
+      <select id="saidaTipo">
+        <option value="COMPLETO">Completo</option>
+        <option value="PARCIAL">Parcial</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Observação (o que foi retirado / o que ficou pendente)</label>
+      <input type="text" id="saidaObservacao" placeholder="Ex: retirou 2 caixas, ficou pendente 1 item">
+    </div>
+    <div id="saidaErro" class="error-msg hidden"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="fecharModalSaida()">Cancelar</button>
+      <button class="btn" onclick="confirmarSaida()">Confirmar saída</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: ADMIN ===================== -->
+<div id="modalAdmin" class="modal-overlay hidden">
+  <div class="modal" style="max-width:460px;">
+    <h2>Painel do administrador</h2>
+    <div id="adminLoginArea">
+      <div class="field"><label>PIN de administrador</label><input type="password" id="adminPinInput"></div>
+      <div id="adminLoginErro" class="error-msg hidden"></div>
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="fecharModalAdmin()">Cancelar</button>
+        <button class="btn" onclick="entrarAdmin()">Entrar</button>
+      </div>
+    </div>
+    <div id="adminPainelArea" class="hidden">
+      <div class="field">
+        <label>Cadastrar novo colaborador</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="adminNovoNome" placeholder="Nome">
+          <input type="text" id="adminNovoPin" placeholder="PIN" style="max-width:100px;">
+          <button class="btn" style="padding:12px 14px;" onclick="adminCadastrar()">+</button>
+        </div>
+        <div id="adminAddErro" class="error-msg hidden"></div>
+      </div>
+      <div id="adminListaPins" style="max-height:260px; overflow:auto; margin-top:16px;"></div>
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="fecharModalAdmin()">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================== CONFIGURAÇÃO ==================
+// Cole aqui a URL do Web App publicado no Apps Script (termina em /exec)
+const API_URL = 'https://script.google.com/macros/s/AKfycbxI7vAwW6nXMuRoexcdRGtNd4yoMwb7ztsqHQWiNVmEW7je6re3OrJZ1uwwuS4QbMeSFQ/exec';
+
+// ================== JSONP HELPER ==================
+let _jsonpCounter = 0;
+function chamarApi(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + (_jsonpCounter++) + '_' + Date.now();
+    window[cbName] = (data) => {
+      resolve(data);
+      delete window[cbName];
+      script.remove();
+    };
+    const query = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+    const script = document.createElement('script');
+    script.src = API_URL + '?' + query + '&callback=' + cbName;
+    script.onerror = () => reject(new Error('Falha ao conectar com o servidor'));
+    document.body.appendChild(script);
+  });
+}
+
+// ================== ESTADO ==================
+let operadorAtual = null; // {pin, nome}
+let pinDigitado = '';
+let ativos = [];
+let finalizadosCache = {}; // por mes
+let mesesDisponiveis = [];
+let mesSelecionado = null;
+let cronometroInterval = null;
+let pollInterval = null;
+
+// ================== LOGIN POR PIN ==================
+function montarKeypad() {
+  const keypad = document.getElementById('keypad');
+  const teclas = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  keypad.innerHTML = '';
+  teclas.forEach(t => {
+    const b = document.createElement('button');
+    b.textContent = t;
+    if (t === '') { b.style.visibility = 'hidden'; }
+    if (t === '⌫') { b.onclick = () => { pinDigitado = pinDigitado.slice(0,-1); atualizarPinDots(); }; }
+    else if (t !== '') { b.onclick = () => digitarPin(t); }
+    keypad.appendChild(b);
+  });
+}
+function digitarPin(d) {
+  if (pinDigitado.length >= 4) return;
+  pinDigitado += d;
+  atualizarPinDots();
+  if (pinDigitado.length === 4) validarPinLogin();
+}
+function atualizarPinDots() {
+  const dots = document.querySelectorAll('#pinDots span');
+  dots.forEach((el, i) => el.classList.toggle('filled', i < pinDigitado.length));
+}
+async function validarPinLogin() {
+  const el = document.getElementById('loginError');
+  el.classList.add('hidden');
+  try {
+    const resp = await chamarApi({ action: 'validarPin', pin: pinDigitado });
+    if (resp.ok) {
+      operadorAtual = { pin: pinDigitado, nome: resp.nome };
+      entrarNoApp();
+    } else {
+      el.textContent = resp.erro || 'PIN inválido';
+      el.classList.remove('hidden');
+      pinDigitado = '';
+      atualizarPinDots();
+    }
+  } catch (e) {
+    el.textContent = 'Não foi possível conectar. Verifique sua internet.';
+    el.classList.remove('hidden');
+    pinDigitado = '';
+    atualizarPinDots();
+  }
+}
+function entrarNoApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('operadorBadge').textContent = operadorAtual.nome;
+  carregarTudo();
+  pollInterval = setInterval(carregarTudo, 20000);
+  cronometroInterval = setInterval(atualizarCronometros, 1000);
+  iniciarRelogio();
+}
+let relogioAtivo = false;
+const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function iniciarRelogio() {
+  if (relogioAtivo) return;
+  relogioAtivo = true;
+  function tick() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    const dataFmt = `${DIAS_SEMANA[d.getDay()]}., ${d.getDate()} De ${MESES_ABREV[d.getMonth()]}.`;
+    const elHora = document.getElementById('clockTime');
+    const elData = document.getElementById('clockDate');
+    if (elHora) elHora.textContent = `${hh}:${mm}:${ss}`;
+    if (elData) elData.textContent = dataFmt;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+function logout() {
+  operadorAtual = null;
+  pinDigitado = '';
+  atualizarPinDots();
+  clearInterval(pollInterval);
+  clearInterval(cronometroInterval);
+  relogioAtivo = false;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+// ================== TEMA ==================
+function toggleTheme() {
+  const atual = document.documentElement.getAttribute('data-theme');
+  const novo = atual === 'light' ? 'dark' : 'light';
+  if (novo === 'light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  document.getElementById('themeBtn').textContent = novo === 'light' ? '☀️' : '🌙';
+  localStorage.setItem('controleRetiraTema', novo);
+}
+(function initTheme() {
+  const salvo = localStorage.getItem('controleRetiraTema');
+  if (salvo === 'light') { document.documentElement.setAttribute('data-theme','light'); }
+})();
+
+// ================== ABAS ==================
+function mudarAba(aba) {
+  document.getElementById('painelOperacao').classList.toggle('hidden', aba !== 'operacao');
+  document.getElementById('painelIndicadores').classList.toggle('hidden', aba !== 'indicadores');
+  document.getElementById('tabOperacaoBtn').classList.toggle('active', aba === 'operacao');
+  document.getElementById('tabIndicadoresBtn').classList.toggle('active', aba === 'indicadores');
+  if (aba === 'indicadores') renderIndicadores();
+}
+
+// ================== CARREGAR DADOS ==================
+async function carregarTudo() {
+  try {
+    const [respAtivos, respMeses] = await Promise.all([
+      chamarApi({ action: 'listarAtivos' }),
+      chamarApi({ action: 'listarMesesDisponiveis' })
+    ]);
+    ativos = respAtivos.ativos || [];
+    mesesDisponiveis = respMeses.meses || [];
+    montarFiltroMes();
+    if (!mesSelecionado) mesSelecionado = mesesDisponiveis[0];
+    if (mesSelecionado) {
+      const respFin = await chamarApi({ action: 'listarFinalizados', mes: mesSelecionado });
+      finalizadosCache[mesSelecionado] = respFin.finalizados || [];
+    }
+    renderAtivos();
+    renderFinalizados();
+    renderKpisOperacao();
+    if (!document.getElementById('painelIndicadores').classList.contains('hidden')) renderIndicadores();
+  } catch (e) { console.error(e); }
+}
+function montarFiltroMes() {
+  const sel = document.getElementById('filtroMes');
+  const atual = sel.value;
+  sel.innerHTML = mesesDisponiveis.map(m => `<option value="${m}">${m}</option>`).join('');
+  if (atual) sel.value = atual;
+  sel.onchange = async () => {
+    mesSelecionado = sel.value;
+    if (!finalizadosCache[mesSelecionado]) {
+      const respFin = await chamarApi({ action: 'listarFinalizados', mes: mesSelecionado });
+      finalizadosCache[mesSelecionado] = respFin.finalizados || [];
+    }
+    renderFinalizados();
+    renderIndicadores();
+  };
+}
+
+// ================== RENDER: OPERAÇÃO ==================
+function renderAtivos() {
+  const busca = (document.getElementById('buscaInput').value || '').toLowerCase();
+  const lista = ativos.filter(a =>
+    !busca || a.nome.toLowerCase().includes(busca) || String(a.pedido).toLowerCase().includes(busca)
+  );
+  const div = document.getElementById('listaAtivos');
+  document.getElementById('countAtivos').textContent = ativos.length;
+  div.innerHTML = lista.map(a => `
+    <div class="list-item" data-entrada="${a.entrada}" data-id="${a.id}">
+      <div class="info">
+        <b>${escapeHtml(a.nome)}</b>
+        <div>Pedido ${escapeHtml(a.pedido)} · Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <span class="time-pill" data-cron>0min</span>
+        <button class="btn secondary" onclick="abrirModalSaida('${a.id}')">↩ Registrar Saída</button>
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--text-muted); font-size:13px;">Nenhum cliente encontrado.</div>';
+  atualizarCronometros();
+}
+function atualizarCronometros() {
+  document.querySelectorAll('#listaAtivos .list-item').forEach(el => {
+    const entrada = new Date(el.getAttribute('data-entrada'));
+    const min = Math.max(0, Math.round((Date.now() - entrada.getTime())/60000));
+    el.querySelector('[data-cron]').textContent = min + 'min';
+  });
+  document.getElementById('kpiNoCd').textContent = ativos.length;
+  document.getElementById('kpiAtual') && (document.getElementById('kpiAtual').textContent = ativos.length);
+}
+function renderFinalizados() {
+  const busca = (document.getElementById('buscaFinalizados').value || '').toLowerCase();
+  const lista = (finalizadosCache[mesSelecionado] || []).filter(f =>
+    !busca || f.nome.toLowerCase().includes(busca) || String(f.pedido).toLowerCase().includes(busca)
+  ).sort((a,b) => new Date(b.entrada) - new Date(a.entrada));
+  document.getElementById('countFinalizados').textContent = lista.length;
+  document.getElementById('tabelaFinalizados').innerHTML = lista.map(f => `
+    <tr>
+      <td>${escapeHtml(f.nome)}</td>
+      <td>${escapeHtml(f.pedido)}</td>
+      <td>${dataHoraCurta(f.entrada)}</td>
+      <td>${dataHoraCurta(f.saida)}</td>
+      <td>${f.tempoPermanencia}</td>
+      <td style="font-size:12px;">
+        <div>${escapeHtml(f.operadorEntrada||'-')}</div>
+        <div style="color:var(--text-muted);">Resp. Entrada</div>
+        <div style="margin-top:6px;">${escapeHtml(f.operadorSaida||'-')}</div>
+        <div style="color:var(--text-muted);">Resp. Saída</div>
+      </td>
+    </tr>
+  `).join('');
+}
+function renderKpisOperacao() {
+  const hoje = new Date().toDateString();
+  const finHoje = (finalizadosCache[mesSelecionado]||[]).filter(f => new Date(f.entrada).toDateString() === hoje).length;
+  const ativosHoje = ativos.filter(a => new Date(a.entrada).toDateString() === hoje).length;
+  document.getElementById('kpiHoje').textContent = finHoje + ativosHoje;
+  document.getElementById('kpiNoCd').textContent = ativos.length;
+}
+
+// ================== MODAL NOVO CLIENTE ==================
+function abrirModalNovo() {
+  document.getElementById('novoNome').value = '';
+  document.getElementById('novoPedido').value = '';
+  document.getElementById('novoErro').classList.add('hidden');
+  document.getElementById('modalNovo').classList.remove('hidden');
+}
+function fecharModalNovo() { document.getElementById('modalNovo').classList.add('hidden'); }
+async function confirmarEntrada() {
+  const nome = document.getElementById('novoNome').value.trim();
+  const pedido = document.getElementById('novoPedido').value.trim();
+  const erroEl = document.getElementById('novoErro');
+  if (!nome || !pedido) { erroEl.textContent = 'Preencha nome e pedido.'; erroEl.classList.remove('hidden'); return; }
+  const resp = await chamarApi({ action: 'registrarEntrada', nome, pedido, pin: operadorAtual.pin });
+  if (resp.ok) { fecharModalNovo(); carregarTudo(); }
+  else { erroEl.textContent = resp.erro || 'Erro ao registrar.'; erroEl.classList.remove('hidden'); }
+}
+let saidaIdAtual = null;
+function abrirModalSaida(id) {
+  saidaIdAtual = id;
+  document.getElementById('saidaTipo').value = 'COMPLETO';
+  document.getElementById('saidaObservacao').value = '';
+  document.getElementById('saidaErro').classList.add('hidden');
+  document.getElementById('modalSaida').classList.remove('hidden');
+}
+function fecharModalSaida() { document.getElementById('modalSaida').classList.add('hidden'); }
+async function confirmarSaida() {
+  const tipoRetirada = document.getElementById('saidaTipo').value;
+  const observacao = document.getElementById('saidaObservacao').value.trim();
+  const erroEl = document.getElementById('saidaErro');
+  const resp = await chamarApi({ action: 'registrarSaida', id: saidaIdAtual, pin: operadorAtual.pin, tipoRetirada, observacao });
+  if (resp.ok) { fecharModalSaida(); carregarTudo(); }
+  else { erroEl.textContent = resp.erro || 'Erro ao registrar saída.'; erroEl.classList.remove('hidden'); }
+}
+
+// ================== INDICADORES ==================
+function renderIndicadores() {
+  const nomeF = (document.getElementById('filtroNome').value||'').toLowerCase();
+  const pedidoF = (document.getElementById('filtroPedido').value||'').toLowerCase();
+  const diaF = document.getElementById('filtroDia').value;
+  let lista = (finalizadosCache[mesSelecionado] || []).filter(f => {
+    if (nomeF && !f.nome.toLowerCase().includes(nomeF)) return false;
+    if (pedidoF && !String(f.pedido).toLowerCase().includes(pedidoF)) return false;
+    if (diaF && new Date(f.entrada).toISOString().slice(0,10) !== diaF) return false;
+    return true;
+  });
+  const minutos = lista.map(f => Number(f.minutos)).filter(n => !isNaN(n));
+  document.getElementById('kpiTotal').textContent = lista.length;
+  document.getElementById('kpiAtual').textContent = ativos.length;
+  document.getElementById('kpiMedio').textContent = minutos.length ? formatarMin(Math.round(minutos.reduce((a,b)=>a+b,0)/minutos.length)) : '-';
+  document.getElementById('kpiMaior').textContent = minutos.length ? formatarMin(Math.max(...minutos)) : '-';
+  document.getElementById('kpiMenor').textContent = minutos.length ? formatarMin(Math.min(...minutos)) : '-';
+
+  // agrega por dia (agregação client-side, sem depender do backend)
+  const porDia = {};
+  lista.forEach(f => {
+    const dia = new Date(f.entrada).toISOString().slice(0,10);
+    if (!porDia[dia]) porDia[dia] = [];
+    porDia[dia].push(Number(f.minutos)||0);
+  });
+  const dias = Object.keys(porDia).sort();
+  const medias = dias.map(d => Math.round(porDia[d].reduce((a,b)=>a+b,0)/porDia[d].length));
+  document.getElementById('kpiMedioDia').textContent = medias.length ? formatarMin(Math.round(medias.reduce((a,b)=>a+b,0)/medias.length)) : '-';
+
+  renderGraficoPorDia(dias, medias);
+  renderGraficoPorUsuario(lista);
+}
+let chartInstanceUsuario = null;
+function renderGraficoPorUsuario(lista) {
+  // Baseado nos registros finalizados do período filtrado (dia/mês).
+  // Entradas de clientes ainda "em atendimento" só entram nessa contagem
+  // depois que a saída for registrada.
+  const contagem = {};
+  lista.forEach(f => {
+    if (f.operadorEntrada) {
+      contagem[f.operadorEntrada] = contagem[f.operadorEntrada] || { entradas: 0, saidas: 0 };
+      contagem[f.operadorEntrada].entradas++;
+    }
+    if (f.operadorSaida) {
+      contagem[f.operadorSaida] = contagem[f.operadorSaida] || { entradas: 0, saidas: 0 };
+      contagem[f.operadorSaida].saidas++;
+    }
+  });
+  const usuarios = Object.keys(contagem).sort();
+  const entradas = usuarios.map(u => contagem[u].entradas);
+  const saidas = usuarios.map(u => contagem[u].saidas);
+
+  const opts = {
+    chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent' },
+    theme: { mode: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
+    series: [{ name: 'Entradas', data: entradas }, { name: 'Saídas', data: saidas }],
+    xaxis: { categories: usuarios },
+    yaxis: { labels: { show: false } },
+    grid: { show: false },
+    colors: ['#34d399', '#ff6a2b'],
+    dataLabels: { enabled: true, style: { fontSize: '11px', colors: ['#ffffff'] } },
+    legend: { position: 'top' }
+  };
+  document.getElementById('chartPorUsuario').innerHTML = '';
+  chartInstanceUsuario = new ApexCharts(document.querySelector('#chartPorUsuario'), opts);
+  chartInstanceUsuario.render();
+}
+let chartInstance = null;
+function renderGraficoPorDia(dias, medias) {
+  const opts = {
+    chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent' },
+    theme: { mode: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
+    series: [{ name: 'Tempo médio', data: medias }],
+    xaxis: { categories: dias },
+    yaxis: { labels: { show: false } },
+    grid: { show: false },
+    colors: ['#ff6a2b'],
+    dataLabels: {
+      enabled: true,
+      formatter: function (val) { return formatarMin(val); },
+      style: { fontSize: '12px', fontWeight: 600, colors: ['#ffffff'] },
+      offsetY: 20
+    }
+  };
+  document.getElementById('chartPorDia').innerHTML = '';
+  chartInstance = new ApexCharts(document.querySelector('#chartPorDia'), opts);
+  chartInstance.render();
+}
+
+// ================== ADMIN ==================
+function entrarModoAdmin() {
+  document.getElementById('adminLoginArea').classList.remove('hidden');
+  document.getElementById('adminPainelArea').classList.add('hidden');
+  document.getElementById('adminPinInput').value = '';
+  document.getElementById('adminLoginErro').classList.add('hidden');
+  document.getElementById('modalAdmin').classList.remove('hidden');
+}
+function fecharModalAdmin() { document.getElementById('modalAdmin').classList.add('hidden'); }
+let adminPinAtual = null;
+async function entrarAdmin() {
+  const pin = document.getElementById('adminPinInput').value.trim();
+  const resp = await chamarApi({ action: 'adminListarPins', adminPin: pin });
+  if (resp.erro) {
+    document.getElementById('adminLoginErro').textContent = resp.erro;
+    document.getElementById('adminLoginErro').classList.remove('hidden');
+    return;
+  }
+  adminPinAtual = pin;
+  document.getElementById('adminLoginArea').classList.add('hidden');
+  document.getElementById('adminPainelArea').classList.remove('hidden');
+  renderListaAdmin(resp.pins);
+}
+function renderListaAdmin(pins) {
+  document.getElementById('adminListaPins').innerHTML = pins.map(p => `
+    <div class="admin-row">
+      <div>
+        <b>${escapeHtml(p.nome)}</b>
+        <div style="font-size:12px; color:var(--text-muted);">PIN ${escapeHtml(String(p.pin))}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="status ${p.ativo ? 'ativo':'inativo'}">${p.ativo ? 'Ativo':'Inativo'}</span>
+        <button class="link-btn" onclick="adminToggle('${p.pin}')">${p.ativo ? 'Remover' : 'Reativar'}</button>
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--text-muted); font-size:13px;">Nenhum colaborador cadastrado.</div>';
+}
+async function adminCadastrar() {
+  const nome = document.getElementById('adminNovoNome').value.trim();
+  const pin = document.getElementById('adminNovoPin').value.trim();
+  const erroEl = document.getElementById('adminAddErro');
+  if (!nome || !pin) { erroEl.textContent = 'Informe nome e PIN.'; erroEl.classList.remove('hidden'); return; }
+  const resp = await chamarApi({ action: 'adminAddPin', adminPin: adminPinAtual, nome, pin });
+  if (resp.erro) { erroEl.textContent = resp.erro; erroEl.classList.remove('hidden'); return; }
+  erroEl.classList.add('hidden');
+  document.getElementById('adminNovoNome').value = '';
+  document.getElementById('adminNovoPin').value = '';
+  const lista = await chamarApi({ action: 'adminListarPins', adminPin: adminPinAtual });
+  renderListaAdmin(lista.pins);
+}
+async function adminToggle(pin) {
+  await chamarApi({ action: 'adminTogglePin', adminPin: adminPinAtual, pin });
+  const lista = await chamarApi({ action: 'adminListarPins', adminPin: adminPinAtual });
+  renderListaAdmin(lista.pins);
+}
+
+// ================== UTILS ==================
+function escapeHtml(s) { return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function horaCurta(iso) { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); }
+function dataHoraCurta(iso) { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + horaCurta(iso); }
+function formatarMin(min) { const h = Math.floor(min/60), m = min%60; return h>0 ? `${h}h ${m}min` : `${m}min`; }
+
+montarKeypad();
+</script>
+</body>
+</html>
