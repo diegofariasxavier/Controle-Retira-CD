@@ -102,6 +102,13 @@
   .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
   .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
   .login-card { width: 100%; max-width: 340px; text-align: center; }
+  .login-logo-wrap {
+    width: 108px; height: 108px; border-radius: 26px; margin: 0 auto 22px;
+    background: var(--card); border: 1px solid var(--card-border);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18); overflow: hidden;
+  }
+  .login-logo-wrap img { width: 74%; height: 74%; object-fit: contain; }
   .pin-dots { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
   .pin-dots span { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--card-border); }
   .pin-dots span.filled { background: var(--accent); border-color: var(--accent); }
@@ -129,12 +136,12 @@
 <!-- ===================== TELA DE LOGIN (PIN) ===================== -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
-    <div class="brand" style="justify-content:center; margin-bottom:24px;">
-      <div class="logo">CD</div>
-      <div style="text-align:left">
-        <h1>Controle Retira</h1>
-        <p>Identifique-se com seu PIN</p>
-      </div>
+    <div class="login-logo-wrap">
+      <img src="logo.png" alt="Logo">
+    </div>
+    <div style="margin-bottom:24px;">
+      <h1 style="margin:0; font-size:17px;">Controle Retira</h1>
+      <p style="font-size:12px; margin:4px 0 0; color:var(--text-muted);">Identifique-se com seu PIN</p>
     </div>
     <div class="pin-dots" id="pinDots">
       <span></span><span></span><span></span><span></span>
