@@ -85,6 +85,7 @@
   }
   .list-item .info b { font-size: 15px; }
   .list-item .info div { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .list-item .info .obs-line { color: var(--text); }
   .time-pill { background: var(--green-bg); color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-right: 12px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--card-border); }
@@ -188,7 +189,7 @@
 
       <div class="row">
         <button class="btn" onclick="abrirModalNovo()">+ Novo Cliente</button>
-        <input type="text" id="buscaInput" placeholder="Buscar por nome ou pedido..." oninput="renderAtivos()">
+        <input type="text" id="buscaInput" placeholder="Buscar por nome/placa ou pedido..." oninput="renderAtivos()">
       </div>
 
       <div class="section-title">Em atendimento <span class="badge-count" id="countAtivos">0</span></div>
@@ -196,10 +197,10 @@
 
       <div class="section-title" style="justify-content: space-between;">
         <div style="display:flex; align-items:center; gap:10px;">Finalizados <span class="badge-count" id="countFinalizados">0</span></div>
-        <input type="text" id="buscaFinalizados" placeholder="Buscar por nome ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
+        <input type="text" id="buscaFinalizados" placeholder="Buscar por nome/placa ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
       </div>
       <table>
-        <thead><tr><th>Nome</th><th>Pedido</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>Usuário Responsável</th></tr></thead>
+        <thead><tr><th>Nome / Placa</th><th>Pedido</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>NF de Saída</th><th>Observação</th><th>Usuário Responsável</th></tr></thead>
         <tbody id="tabelaFinalizados"></tbody>
       </table>
     </section>
@@ -208,7 +209,7 @@
     <section id="painelIndicadores" class="hidden">
       <div class="filters">
         <select id="filtroMes"></select>
-        <input type="text" id="filtroNome" placeholder="Filtrar por nome" oninput="renderIndicadores()">
+        <input type="text" id="filtroNome" placeholder="Filtrar por nome/placa" oninput="renderIndicadores()">
         <input type="text" id="filtroPedido" placeholder="Filtrar por pedido" oninput="renderIndicadores()">
         <input type="date" id="filtroDia" onchange="renderIndicadores()">
       </div>
@@ -239,7 +240,7 @@
 <div id="modalNovo" class="modal-overlay hidden">
   <div class="modal">
     <h2>Novo cliente</h2>
-    <div class="field"><label>Nome do cliente</label><input type="text" id="novoNome"></div>
+    <div class="field"><label>Nome / Placa</label><input type="text" id="novoNome"></div>
     <div class="field"><label>Número do cupom fiscal ou pedido</label><input type="text" id="novoPedido"></div>
     <div id="novoErro" class="error-msg hidden"></div>
     <div class="modal-actions">
@@ -259,6 +260,10 @@
         <option value="COMPLETO">Completo</option>
         <option value="PARCIAL">Parcial</option>
       </select>
+    </div>
+    <div class="field">
+      <label>Número da NF de Saída</label>
+      <input type="text" id="saidaNf" placeholder="Ex: 123456">
     </div>
     <div class="field">
       <label>Observação (o que foi retirado / o que ficou pendente)</label>
@@ -305,7 +310,7 @@
 <script>
 // ================== CONFIGURAÇÃO ==================
 // Cole aqui a URL do Web App publicado no Apps Script (termina em /exec)
-const API_URL = 'https://script.google.com/macros/s/AKfycbxI7vAwW6nXMuRoexcdRGtNd4yoMwb7ztsqHQWiNVmEW7je6re3OrJZ1uwwuS4QbMeSFQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwzq0j5zruUHA8_1_Ky_qBarkx02FwHcVYJaQLNyOQh-esguHxs6GrxpP0TPc1vXAlrSw/exec';
 
 // ================== JSONP HELPER ==================
 let _jsonpCounter = 0;
@@ -493,6 +498,7 @@ function renderAtivos() {
       <div class="info">
         <b>${escapeHtml(a.nome)}</b>
         <div>Pedido ${escapeHtml(a.pedido)} · Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
+        ${a.observacao ? `<div class="obs-line">Obs: ${escapeHtml(a.observacao)}</div>` : ''}
       </div>
       <div style="display:flex; align-items:center;">
         <span class="time-pill" data-cron>0min</span>
@@ -524,6 +530,8 @@ function renderFinalizados() {
       <td>${dataHoraCurta(f.entrada)}</td>
       <td>${dataHoraCurta(f.saida)}</td>
       <td>${f.tempoPermanencia}</td>
+      <td>${escapeHtml(f.nfSaida || '-')}</td>
+      <td>${escapeHtml(f.observacao || '-')}</td>
       <td style="font-size:12px;">
         <div>${escapeHtml(f.operadorEntrada||'-')}</div>
         <div style="color:var(--text-muted);">Resp. Entrada</div>
@@ -553,7 +561,7 @@ async function confirmarEntrada() {
   const nome = document.getElementById('novoNome').value.trim();
   const pedido = document.getElementById('novoPedido').value.trim();
   const erroEl = document.getElementById('novoErro');
-  if (!nome || !pedido) { erroEl.textContent = 'Preencha nome e pedido.'; erroEl.classList.remove('hidden'); return; }
+  if (!nome || !pedido) { erroEl.textContent = 'Preencha nome/placa e pedido.'; erroEl.classList.remove('hidden'); return; }
   const resp = await chamarApi({ action: 'registrarEntrada', nome, pedido, pin: operadorAtual.pin });
   if (resp.ok) { fecharModalNovo(); carregarTudo(); }
   else { erroEl.textContent = resp.erro || 'Erro ao registrar.'; erroEl.classList.remove('hidden'); }
@@ -562,6 +570,7 @@ let saidaIdAtual = null;
 function abrirModalSaida(id) {
   saidaIdAtual = id;
   document.getElementById('saidaTipo').value = 'COMPLETO';
+  document.getElementById('saidaNf').value = '';
   document.getElementById('saidaObservacao').value = '';
   document.getElementById('saidaErro').classList.add('hidden');
   document.getElementById('modalSaida').classList.remove('hidden');
@@ -569,9 +578,10 @@ function abrirModalSaida(id) {
 function fecharModalSaida() { document.getElementById('modalSaida').classList.add('hidden'); }
 async function confirmarSaida() {
   const tipoRetirada = document.getElementById('saidaTipo').value;
+  const nfSaida = document.getElementById('saidaNf').value.trim();
   const observacao = document.getElementById('saidaObservacao').value.trim();
   const erroEl = document.getElementById('saidaErro');
-  const resp = await chamarApi({ action: 'registrarSaida', id: saidaIdAtual, pin: operadorAtual.pin, tipoRetirada, observacao });
+  const resp = await chamarApi({ action: 'registrarSaida', id: saidaIdAtual, pin: operadorAtual.pin, tipoRetirada, nfSaida, observacao });
   if (resp.ok) { fecharModalSaida(); carregarTudo(); }
   else { erroEl.textContent = resp.erro || 'Erro ao registrar saída.'; erroEl.classList.remove('hidden'); }
 }
