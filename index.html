@@ -76,17 +76,47 @@
     border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap;
   }
   .btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--card-border); }
+  .btn:disabled {
+    opacity: .62; cursor: not-allowed; filter: saturate(.65);
+  }
+  .login-enter-btn { width: 100%; margin-top: 12px; }
   .section-title { display: flex; align-items: center; gap: 10px; font-weight: 700; margin: 24px 0 12px; }
   .badge-count { background: var(--card-border); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
   .list-item {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--card); border: 1px solid var(--card-border); border-left: 3px solid var(--green);
     border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+    transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .list-item .info b { font-size: 15px; }
   .list-item .info div { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
   .list-item .info .obs-line { color: var(--text); }
   .time-pill { background: var(--green-bg); color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-right: 12px; }
+  .list-item.atrasado {
+    background: linear-gradient(135deg, #681f29 0%, #431820 100%);
+    border-color: #ef4444; border-left: 4px solid #ff5a5f;
+    box-shadow: 0 0 0 1px rgba(239,68,68,.18), 0 8px 24px rgba(127,29,29,.22);
+  }
+  .list-item.atrasado .info b,
+  .list-item.atrasado .info div,
+  .list-item.atrasado .info .obs-line { color: #fff; }
+  .list-item.atrasado .time-pill { background: #ef4444; color: #fff; }
+  .list-item.atrasado .btn.secondary {
+    background: #fff; color: #7f1d1d; border-color: rgba(255,255,255,.65);
+  }
+  .atraso-label {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 7px !important;
+    padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,.15);
+    color: #fff !important; font-weight: 700; letter-spacing: .01em;
+  }
+  [data-theme="light"] .list-item.atrasado {
+    background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%);
+    border-color: #ef4444; box-shadow: 0 8px 24px rgba(127,29,29,.12);
+  }
+  [data-theme="light"] .list-item.atrasado .info b,
+  [data-theme="light"] .list-item.atrasado .info div,
+  [data-theme="light"] .list-item.atrasado .info .obs-line { color: #7f1d1d; }
+  [data-theme="light"] .atraso-label { background: rgba(127,29,29,.10); color: #7f1d1d !important; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--card-border); }
   td { padding: 12px; border-bottom: 1px solid var(--card-border); }
@@ -142,6 +172,7 @@
     </div>
     <div id="loginError" class="error-msg hidden"></div>
     <div class="keypad" id="keypad" style="margin-top:16px;"></div>
+    <button type="button" class="btn login-enter-btn" id="loginEnterBtn" onclick="validarPinLogin()" disabled>Entrar</button>
     <div style="margin-top:16px;">
       <button class="link-btn" onclick="entrarModoAdmin()">Acesso administrador</button>
     </div>
@@ -244,8 +275,8 @@
     <div class="field"><label>Número do cupom fiscal ou pedido</label><input type="text" id="novoPedido"></div>
     <div id="novoErro" class="error-msg hidden"></div>
     <div class="modal-actions">
-      <button class="btn secondary" onclick="fecharModalNovo()">Cancelar</button>
-      <button class="btn" onclick="confirmarEntrada()">Registrar</button>
+      <button type="button" class="btn secondary" id="btnCancelarEntrada" onclick="fecharModalNovo()">Cancelar</button>
+      <button type="button" class="btn" id="btnRegistrarEntrada" onclick="confirmarEntrada()">Registrar</button>
     </div>
   </div>
 </div>
@@ -339,6 +370,9 @@ let mesesDisponiveis = [];
 let mesSelecionado = null;
 let cronometroInterval = null;
 let pollInterval = null;
+let loginEmAndamento = false;
+let registroEntradaEmAndamento = false;
+const LIMITE_ATRASO_MINUTOS = 30;
 
 // ================== LOGIN POR PIN ==================
 function montarKeypad() {
@@ -358,15 +392,26 @@ function digitarPin(d) {
   if (pinDigitado.length >= 4) return;
   pinDigitado += d;
   atualizarPinDots();
-  if (pinDigitado.length === 4) validarPinLogin();
 }
 function atualizarPinDots() {
   const dots = document.querySelectorAll('#pinDots span');
   dots.forEach((el, i) => el.classList.toggle('filled', i < pinDigitado.length));
+  const btnEntrar = document.getElementById('loginEnterBtn');
+  if (btnEntrar) btnEntrar.disabled = pinDigitado.length !== 4 || loginEmAndamento;
 }
 async function validarPinLogin() {
+  if (loginEmAndamento) return;
   const el = document.getElementById('loginError');
   el.classList.add('hidden');
+  if (pinDigitado.length !== 4) {
+    el.textContent = 'Digite os 4 números do PIN.';
+    el.classList.remove('hidden');
+    return;
+  }
+  const btnEntrar = document.getElementById('loginEnterBtn');
+  loginEmAndamento = true;
+  btnEntrar.disabled = true;
+  btnEntrar.textContent = 'Entrando...';
   try {
     const resp = await chamarApi({ action: 'validarPin', pin: pinDigitado });
     if (resp.ok) {
@@ -382,6 +427,10 @@ async function validarPinLogin() {
     el.textContent = 'Não foi possível conectar. Verifique sua internet.';
     el.classList.remove('hidden');
     pinDigitado = '';
+    atualizarPinDots();
+  } finally {
+    loginEmAndamento = false;
+    btnEntrar.textContent = 'Entrar';
     atualizarPinDots();
   }
 }
@@ -417,6 +466,7 @@ function iniciarRelogio() {
 function logout() {
   operadorAtual = null;
   pinDigitado = '';
+  loginEmAndamento = false;
   atualizarPinDots();
   clearInterval(pollInterval);
   clearInterval(cronometroInterval);
@@ -499,6 +549,7 @@ function renderAtivos() {
         <b>${escapeHtml(a.nome)}</b>
         <div>Pedido ${escapeHtml(a.pedido)} · Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
         ${a.observacao ? `<div class="obs-line">Obs: ${escapeHtml(a.observacao)}</div>` : ''}
+        <div class="atraso-label hidden" data-atraso>⚠ Atendimento atrasado — mais de 30 minutos</div>
       </div>
       <div style="display:flex; align-items:center;">
         <span class="time-pill" data-cron>0min</span>
@@ -511,8 +562,14 @@ function renderAtivos() {
 function atualizarCronometros() {
   document.querySelectorAll('#listaAtivos .list-item').forEach(el => {
     const entrada = new Date(el.getAttribute('data-entrada'));
-    const min = Math.max(0, Math.round((Date.now() - entrada.getTime())/60000));
-    el.querySelector('[data-cron]').textContent = min + 'min';
+    const decorridoMs = Date.now() - entrada.getTime();
+    const tempoValido = Number.isFinite(decorridoMs);
+    const min = tempoValido ? Math.max(0, Math.floor(decorridoMs / 60000)) : 0;
+    const atrasado = tempoValido && decorridoMs > LIMITE_ATRASO_MINUTOS * 60000;
+    el.classList.toggle('atrasado', atrasado);
+    el.querySelector('[data-cron]').textContent = atrasado ? `⚠ ${min}min` : `${min}min`;
+    const avisoAtraso = el.querySelector('[data-atraso]');
+    if (avisoAtraso) avisoAtraso.classList.toggle('hidden', !atrasado);
   });
   document.getElementById('kpiNoCd').textContent = ativos.length;
   document.getElementById('kpiAtual') && (document.getElementById('kpiAtual').textContent = ativos.length);
@@ -554,17 +611,44 @@ function abrirModalNovo() {
   document.getElementById('novoNome').value = '';
   document.getElementById('novoPedido').value = '';
   document.getElementById('novoErro').classList.add('hidden');
+  definirEstadoBotaoRegistro(false);
   document.getElementById('modalNovo').classList.remove('hidden');
 }
 function fecharModalNovo() { document.getElementById('modalNovo').classList.add('hidden'); }
+function definirEstadoBotaoRegistro(carregando) {
+  registroEntradaEmAndamento = carregando;
+  const btnRegistrar = document.getElementById('btnRegistrarEntrada');
+  const btnCancelar = document.getElementById('btnCancelarEntrada');
+  if (btnRegistrar) {
+    btnRegistrar.disabled = carregando;
+    btnRegistrar.textContent = carregando ? 'Aguarde...' : 'Registrar';
+    btnRegistrar.setAttribute('aria-busy', carregando ? 'true' : 'false');
+  }
+  if (btnCancelar) btnCancelar.disabled = carregando;
+}
 async function confirmarEntrada() {
+  if (registroEntradaEmAndamento) return;
   const nome = document.getElementById('novoNome').value.trim();
   const pedido = document.getElementById('novoPedido').value.trim();
   const erroEl = document.getElementById('novoErro');
   if (!nome || !pedido) { erroEl.textContent = 'Preencha nome/placa e pedido.'; erroEl.classList.remove('hidden'); return; }
-  const resp = await chamarApi({ action: 'registrarEntrada', nome, pedido, pin: operadorAtual.pin });
-  if (resp.ok) { fecharModalNovo(); carregarTudo(); }
-  else { erroEl.textContent = resp.erro || 'Erro ao registrar.'; erroEl.classList.remove('hidden'); }
+  erroEl.classList.add('hidden');
+  definirEstadoBotaoRegistro(true);
+  try {
+    const resp = await chamarApi({ action: 'registrarEntrada', nome, pedido, pin: operadorAtual.pin });
+    if (resp.ok) {
+      fecharModalNovo();
+      await carregarTudo();
+    } else {
+      erroEl.textContent = resp.erro || 'Erro ao registrar.';
+      erroEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    erroEl.textContent = 'Não foi possível registrar. Verifique sua internet e tente novamente.';
+    erroEl.classList.remove('hidden');
+  } finally {
+    definirEstadoBotaoRegistro(false);
+  }
 }
 let saidaIdAtual = null;
 function abrirModalSaida(id) {
