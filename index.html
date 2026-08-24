@@ -59,11 +59,12 @@
     padding: 14px 2px; cursor: pointer; border-bottom: 2px solid transparent;
   }
   nav.tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
-  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  main { padding: 24px; max-width: 1480px; margin: 0 auto; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; }
   .card {
-    background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px;
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 18px;
+    box-shadow: 0 8px 24px rgba(15,20,32,.04);
   }
   .card .label { font-size: 12px; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
   .card .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
@@ -118,10 +119,48 @@
   [data-theme="light"] .list-item.atrasado .info div,
   [data-theme="light"] .list-item.atrasado .info .obs-line { color: #7f1d1d; }
   [data-theme="light"] .atraso-label { background: rgba(127,29,29,.10); color: #7f1d1d !important; }
-  .table-wrap { width:100%; overflow-x:auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1120px; }
-  tr.row-atrasado td { background: rgba(248,113,113,.055); }
-  tr.row-atrasado-pendente td { background: rgba(248,113,113,.11); }
+  .table-wrap {
+    width:100%; overflow:hidden; background:var(--card); border:1px solid var(--card-border);
+    border-radius:14px; box-shadow:0 8px 24px rgba(15,20,32,.04);
+  }
+  table.finalizados-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:12px; }
+  .finalizados-table th {
+    position:sticky; top:0; z-index:1; background:var(--card); color:var(--text-muted);
+    font-size:10px; line-height:1.15; text-transform:uppercase; letter-spacing:.035em;
+    padding:10px 8px; border-bottom:1px solid var(--card-border); white-space:normal;
+  }
+  .finalizados-table td {
+    padding:10px 8px; border-bottom:1px solid var(--card-border); vertical-align:top;
+    line-height:1.35; overflow-wrap:anywhere; word-break:break-word;
+  }
+  .finalizados-table tbody tr:last-child td { border-bottom:none; }
+  .finalizados-table tbody tr:hover td { background:rgba(148,163,184,.06); }
+  .finalizados-table .col-cliente { width:13%; }
+  .finalizados-table .col-pedido { width:11%; }
+  .finalizados-table .col-retirada { width:8%; text-align:center; }
+  .finalizados-table .col-mov { width:17%; }
+  .finalizados-table .col-nf { width:9%; }
+  .finalizados-table .col-obs { width:13%; }
+  .finalizados-table .col-atraso { width:17%; }
+  .finalizados-table .col-resp { width:12%; }
+  .cell-main { font-weight:700; color:var(--text); }
+  .cell-sub { margin-top:2px; color:var(--text-muted); font-size:10.5px; }
+  .cell-stack { display:grid; gap:3px; }
+  .cell-line { display:flex; gap:5px; align-items:baseline; }
+  .cell-line .mini-label { color:var(--text-muted); min-width:34px; font-size:10px; text-transform:uppercase; }
+  .tempo-inline { display:inline-flex; align-items:center; margin-top:5px; padding:3px 7px; border-radius:999px; background:var(--green-bg); color:var(--green); font-weight:800; font-size:10.5px; }
+  .tempo-inline.atrasado { background:rgba(248,113,113,.14); color:var(--red); }
+  .pill { display:inline-flex; align-items:center; justify-content:center; background:var(--card-border); padding:4px 8px; border-radius:999px; font-size:10px; font-weight:800; letter-spacing:.02em; white-space:nowrap; }
+  .pill.completo { background:rgba(52,211,153,.12); color:#059669; }
+  .pill.parcial { background:rgba(245,158,11,.14); color:#b45309; }
+  .atraso-ok { display:inline-flex; align-items:center; gap:5px; color:#059669; font-weight:800; font-size:10.5px; margin-bottom:3px; }
+  .atraso-pendente { display:inline-flex; align-items:center; gap:5px; padding:4px 7px; border-radius:7px; background:rgba(248,113,113,.13); color:#dc2626; font-weight:800; font-size:10.5px; }
+  tr.row-atrasado td { background: rgba(248,113,113,.035); }
+  tr.row-atrasado-pendente td { background: rgba(248,113,113,.075); }
+  .chart-card { overflow:hidden; }
+  .chart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:4px; }
+  .chart-help { font-size:11px; color:var(--text-muted); text-align:right; }
+  #chartPorDia, #chartPorUsuario { min-height:300px; }
   .master-box { border-color: rgba(255,106,43,.55); box-shadow: 0 0 0 1px rgba(255,106,43,.08); }
   .master-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
   .master-actions { display:flex; gap:8px; flex-wrap:wrap; }
@@ -135,7 +174,6 @@
 
   th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--card-border); }
   td { padding: 12px; border-bottom: 1px solid var(--card-border); }
-  .pill { background: var(--card-border); padding: 3px 9px; border-radius: 6px; font-size: 12px; }
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex;
     align-items: center; justify-content: center; z-index: 50; padding: 16px;
@@ -165,10 +203,26 @@
   .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; }
   .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
   .filters > * { flex: 1; min-width: 140px; }
+  @media (max-width: 1000px) {
+    main { padding:16px; }
+    .finalizados-table th { font-size:9px; padding:8px 5px; }
+    .finalizados-table td { font-size:11px; padding:9px 5px; }
+    .cell-main { font-size:11px; }
+    .cell-sub, .cell-line { font-size:9.5px; }
+    .pill, .tempo-inline, .atraso-pendente, .atraso-ok { font-size:9px; }
+  }
   @media (max-width: 700px) {
     .grid-2 { grid-template-columns: 1fr; }
-    header { flex-wrap: wrap; gap: 10px; }
-    main { padding: 16px; }
+    header { flex-wrap: wrap; gap: 10px; padding:14px 16px; }
+    .header-right { width:100%; flex-wrap:wrap; }
+    main { padding: 14px; }
+    .grid-kpi { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .card { padding:14px; }
+    .card .value { font-size:24px; }
+    .chart-head { display:block; }
+    .chart-help { text-align:left; margin-top:5px; }
+    .table-wrap { overflow-x:auto; }
+    .finalizados-table { min-width:820px; }
   }
 </style>
 </head>
@@ -261,8 +315,19 @@
         <input type="text" id="buscaFinalizados" placeholder="Buscar por nome/placa ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
       </div>
       <div class="table-wrap">
-        <table>
-          <thead><tr><th>Nome / Placa</th><th>Pedido</th><th>Tipo Retirada</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>NF de Saída</th><th>Observação</th><th>Motivo Atraso</th><th>Obs. Atraso</th><th>Usuário Responsável</th></tr></thead>
+        <table class="finalizados-table">
+          <thead>
+            <tr>
+              <th class="col-cliente">Cliente / Placa</th>
+              <th class="col-pedido">Pedido</th>
+              <th class="col-retirada">Retirada</th>
+              <th class="col-mov">Movimentação</th>
+              <th class="col-nf">NF Saída</th>
+              <th class="col-obs">Obs. Retirada</th>
+              <th class="col-atraso">Justificativa do atraso</th>
+              <th class="col-resp">Responsáveis</th>
+            </tr>
+          </thead>
           <tbody id="tabelaFinalizados"></tbody>
         </table>
       </div>
@@ -287,8 +352,14 @@
         <div class="card"><div class="label">Média clientes/dia</div><div class="value" id="kpiClientesDia">-</div></div>
       </div>
 
-      <div class="card" style="margin-top:20px;">
-        <div class="label" style="margin-bottom:10px;">Tempo médio e clientes atendidos por dia</div>
+      <div class="card chart-card" style="margin-top:20px;">
+        <div class="chart-head">
+          <div>
+            <div class="label">Tempo médio e clientes atendidos por dia</div>
+            <div style="font-size:16px;font-weight:800;margin-top:4px;">Desempenho diário do Retira</div>
+          </div>
+          <div class="chart-help">Barras = tempo médio &nbsp;•&nbsp; Linha = clientes atendidos</div>
+        </div>
         <div id="chartPorDia"></div>
       </div>
 
@@ -570,6 +641,8 @@ function toggleTheme() {
   else document.documentElement.removeAttribute('data-theme');
   document.getElementById('themeBtn').textContent = novo === 'light' ? '☀️' : '🌙';
   localStorage.setItem('controleRetiraTema', novo);
+  // Recria os gráficos para aplicar automaticamente a paleta do tema atual.
+  if (!document.getElementById('painelIndicadores').classList.contains('hidden')) renderIndicadores();
 }
 (function initTheme() {
   const salvo = localStorage.getItem('controleRetiraTema');
@@ -668,36 +741,52 @@ function renderFinalizados() {
   const lista = (finalizadosCache[mesSelecionado] || []).filter(f =>
     !busca || f.nome.toLowerCase().includes(busca) || String(f.pedido).toLowerCase().includes(busca)
   ).sort((a,b) => new Date(b.saida || b.entrada) - new Date(a.saida || a.entrada));
+
   document.getElementById('countFinalizados').textContent = lista.length;
   document.getElementById('tabelaFinalizados').innerHTML = lista.map(f => {
     const atrasado = Number(f.minutos) > LIMITE_ATRASO_MINUTOS;
     const pendente = atrasado && (!String(f.motivoAtraso || '').trim() || !String(f.observacaoAtraso || '').trim());
     const classe = pendente ? 'row-atrasado-pendente' : (atrasado ? 'row-atrasado' : '');
-    const motivo = atrasado ? (f.motivoAtraso || '⚠ Pendente de justificativa') : '-';
-    const obsAtraso = atrasado ? (f.observacaoAtraso || '⚠ Pendente de justificativa') : '-';
+    const tipo = String(f.tipoRetirada || '-').toUpperCase();
+    const tipoClasse = tipo === 'COMPLETO' ? 'completo' : (tipo === 'PARCIAL' ? 'parcial' : '');
+    const tempo = escapeHtml(f.tempoPermanencia || formatarMin(Number(f.minutos)||0));
+
+    let blocoAtraso = '<span style="color:var(--text-muted)">—</span>';
+    if (atrasado && pendente) {
+      blocoAtraso = `
+        <div class="atraso-pendente">⚠ Pendente de justificativa</div>
+        <div class="cell-sub">Motivo e observação obrigatórios pelo MASTER.</div>`;
+    } else if (atrasado) {
+      blocoAtraso = `
+        <div class="atraso-ok">✓ Justificado</div>
+        <div class="cell-main">${escapeHtml(f.motivoAtraso || '-')}</div>
+        <div class="cell-sub">${escapeHtml(f.observacaoAtraso || '-')}</div>
+        ${f.operadorJustificativa ? `<div class="cell-sub">Master: ${escapeHtml(f.operadorJustificativa)}</div>` : ''}`;
+    }
+
     return `
     <tr class="${classe}">
-      <td>${escapeHtml(f.nome)}</td>
-      <td>${escapeHtml(f.pedido)}</td>
-      <td><span class="pill">${escapeHtml(f.tipoRetirada || '-')}</span></td>
-      <td>${dataHoraCurta(f.entrada)}</td>
-      <td>${dataHoraCurta(f.saida)}</td>
-      <td>${escapeHtml(f.tempoPermanencia || formatarMin(Number(f.minutos)||0))}</td>
-      <td>${escapeHtml(f.nfSaida || '-')}</td>
-      <td>${escapeHtml(f.observacao || '-')}</td>
-      <td>${escapeHtml(motivo)}</td>
-      <td>
-        <div>${escapeHtml(obsAtraso)}</div>
-        ${f.operadorJustificativa ? `<div style="color:var(--text-muted); font-size:11px; margin-top:4px;">Justificado por ${escapeHtml(f.operadorJustificativa)}</div>` : ''}
+      <td class="col-cliente"><div class="cell-main">${escapeHtml(f.nome)}</div></td>
+      <td class="col-pedido"><div class="cell-main">${escapeHtml(f.pedido)}</div></td>
+      <td class="col-retirada"><span class="pill ${tipoClasse}">${escapeHtml(tipo)}</span></td>
+      <td class="col-mov">
+        <div class="cell-stack">
+          <div class="cell-line"><span class="mini-label">Ent.</span><span>${dataHoraCurta(f.entrada)}</span></div>
+          <div class="cell-line"><span class="mini-label">Saída</span><span>${dataHoraCurta(f.saida)}</span></div>
+          <div><span class="tempo-inline ${atrasado ? 'atrasado' : ''}">${atrasado ? '⚠ ' : ''}${tempo}</span></div>
+        </div>
       </td>
-      <td style="font-size:12px;">
-        <div>${escapeHtml(f.operadorEntrada||'-')}</div>
-        <div style="color:var(--text-muted);">Resp. Entrada</div>
-        <div style="margin-top:6px;">${escapeHtml(f.operadorSaida||'-')}</div>
-        <div style="color:var(--text-muted);">Resp. Saída</div>
+      <td class="col-nf"><div class="cell-main">${escapeHtml(f.nfSaida || '-')}</div></td>
+      <td class="col-obs">${escapeHtml(f.observacao || '-')}</td>
+      <td class="col-atraso">${blocoAtraso}</td>
+      <td class="col-resp">
+        <div class="cell-stack">
+          <div><span class="cell-main">${escapeHtml(f.operadorEntrada||'-')}</span><div class="cell-sub">Entrada</div></div>
+          <div><span class="cell-main">${escapeHtml(f.operadorSaida||'-')}</span><div class="cell-sub">Saída</div></div>
+        </div>
       </td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">Nenhum registro encontrado.</td></tr>';
 }
 
 function renderKpisOperacao() {
@@ -852,39 +941,106 @@ function renderGraficoPorDia(dias, medias, quantidades) {
     const [ano,mes,dia] = d.split('-');
     return `${dia}/${mes}`;
   });
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const texto = isLight ? '#334155' : '#cbd5e1';
+  const grade = isLight ? '#e5e7eb' : '#263248';
+
   const opts = {
-    chart: { type: 'line', height: 290, toolbar: { show: false }, background: 'transparent' },
-    theme: { mode: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
+    chart: {
+      type: 'line',
+      height: 330,
+      toolbar: { show: false },
+      background: 'transparent',
+      fontFamily: '-apple-system, Segoe UI, Roboto, Arial, sans-serif',
+      foreColor: texto
+    },
     series: [
       { name: 'Tempo médio', type: 'column', data: medias },
       { name: 'Clientes atendidos', type: 'line', data: quantidades }
     ],
-    xaxis: { categories: categorias },
+    colors: ['#f05a24', '#2563eb'],
+    plotOptions: {
+      bar: { columnWidth: '58%', borderRadius: 5, borderRadiusApplication: 'end' }
+    },
+    stroke: { width: [0, 4], curve: 'straight', lineCap: 'round' },
+    markers: {
+      size: [0, 5],
+      strokeWidth: 3,
+      strokeColors: isLight ? '#ffffff' : '#161d2e',
+      hover: { sizeOffset: 2 }
+    },
+    xaxis: {
+      categories: categorias,
+      axisBorder: { show: true, color: grade },
+      axisTicks: { show: false },
+      labels: { style: { fontSize: '11px', fontWeight: 600, colors: categorias.map(() => texto) } }
+    },
     yaxis: [
-      { labels: { show: false }, title: { text: 'Tempo médio' } },
-      { opposite: true, labels: { show: false }, title: { text: 'Clientes' } }
+      {
+        min: 0,
+        forceNiceScale: true,
+        tickAmount: 4,
+        labels: { show: true, formatter: v => `${Math.round(v)}m`, style: { colors: [texto], fontSize: '10px' } },
+        title: { text: 'Tempo médio', style: { color: texto, fontSize: '10px', fontWeight: 700 } }
+      },
+      {
+        opposite: true,
+        min: 0,
+        forceNiceScale: true,
+        tickAmount: 4,
+        labels: { show: true, formatter: v => `${Math.round(v)}`, style: { colors: [texto], fontSize: '10px' } },
+        title: { text: 'Clientes', style: { color: texto, fontSize: '10px', fontWeight: 700 } }
+      }
     ],
-    grid: { show: false },
-    colors: ['#ff6a2b', '#34d399'],
-    stroke: { width: [0, 3], curve: 'smooth' },
-    markers: { size: [0, 4] },
+    grid: {
+      show: true,
+      borderColor: grade,
+      strokeDashArray: 4,
+      xaxis: { lines: { show: false } },
+      padding: { top: 18, right: 6, bottom: 0, left: 2 }
+    },
     dataLabels: {
       enabled: true,
+      enabledOnSeries: [0, 1],
       formatter: function (val, opts) {
-        return opts.seriesIndex === 0 ? formatarMin(Math.round(val)) : `${Math.round(val)} cli.`;
+        return opts.seriesIndex === 0 ? `${Math.round(val)}m` : `${Math.round(val)}`;
       },
-      style: { fontSize: '11px', fontWeight: 600, colors: ['#ffffff'] },
-      offsetY: -4
+      style: {
+        fontSize: '11px',
+        fontWeight: 800,
+        colors: [isLight ? '#7c2d12' : '#ffffff', isLight ? '#1e3a8a' : '#dbeafe']
+      },
+      background: {
+        enabled: true,
+        foreColor: isLight ? '#0f172a' : '#ffffff',
+        padding: 4,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: isLight ? '#e2e8f0' : '#334155',
+        opacity: isLight ? 0.96 : 0.88
+      },
+      offsetY: -6
     },
+    fill: { opacity: [0.92, 1] },
     tooltip: {
       shared: true,
+      intersect: false,
+      theme: isLight ? 'light' : 'dark',
       y: [
         { formatter: val => formatarMin(Math.round(val)) },
         { formatter: val => `${Math.round(val)} clientes` }
       ]
     },
-    legend: { position: 'top' }
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
+      fontSize: '12px',
+      fontWeight: 700,
+      labels: { colors: texto },
+      markers: { width: 10, height: 10, radius: 10 }
+    }
   };
+
   document.getElementById('chartPorDia').innerHTML = '';
   chartInstance = new ApexCharts(document.querySelector('#chartPorDia'), opts);
   chartInstance.render();
