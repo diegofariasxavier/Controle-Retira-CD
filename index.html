@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -117,7 +118,21 @@
   [data-theme="light"] .list-item.atrasado .info div,
   [data-theme="light"] .list-item.atrasado .info .obs-line { color: #7f1d1d; }
   [data-theme="light"] .atraso-label { background: rgba(127,29,29,.10); color: #7f1d1d !important; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table-wrap { width:100%; overflow-x:auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1120px; }
+  tr.row-atrasado td { background: rgba(248,113,113,.055); }
+  tr.row-atrasado-pendente td { background: rgba(248,113,113,.11); }
+  .master-box { border-color: rgba(255,106,43,.55); box-shadow: 0 0 0 1px rgba(255,106,43,.08); }
+  .master-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .master-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .master-pending { margin-top:12px; }
+  .master-pending-item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 0; border-bottom:1px solid var(--card-border); }
+  .master-pending-item:last-child { border-bottom:none; }
+  .master-pending-item .meta { font-size:12px; color:var(--text-muted); margin-top:3px; }
+  .master-tag { display:inline-flex; align-items:center; gap:5px; padding:4px 8px; border-radius:999px; background:rgba(255,106,43,.14); color:var(--accent); font-size:11px; font-weight:700; }
+  textarea { background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text); padding: 12px 14px; border-radius: 8px; font-size: 14px; width: 100%; min-height: 100px; resize: vertical; font-family: inherit; }
+  .motivo-row { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--card-border); font-size:13px; }
+
   th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 10px 12px; border-bottom: 1px solid var(--card-border); }
   td { padding: 12px; border-bottom: 1px solid var(--card-border); }
   .pill { background: var(--card-border); padding: 3px 9px; border-radius: 6px; font-size: 12px; }
@@ -194,6 +209,7 @@
         <span>🕐</span><span id="clockTime">00:00:00</span><span id="clockDate" style="color:var(--text-muted); font-weight:400;"></span>
       </span>
       <span class="op-badge" id="operadorBadge">—</span>
+      <span class="master-tag hidden" id="masterBadge">⭐ MASTER PORTARIA</span>
       <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
       <button class="icon-btn" onclick="logout()">⎋</button>
     </div>
@@ -226,14 +242,30 @@
       <div class="section-title">Em atendimento <span class="badge-count" id="countAtivos">0</span></div>
       <div id="listaAtivos"></div>
 
+      <div id="painelMasterAtrasos" class="card master-box hidden" style="margin-top:20px;">
+        <div class="master-head">
+          <div>
+            <div class="label">MASTER PORTARIA</div>
+            <div style="font-size:16px; font-weight:700; margin-top:5px;">Justificativas de atrasos <span class="badge-count" id="countAtrasosPendentes">0</span></div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Todo atendimento finalizado acima de 30 minutos precisa de motivo e observação.</div>
+          </div>
+          <div class="master-actions">
+            <button class="btn secondary" onclick="abrirModalMotivos()">⚙ Motivos de atraso</button>
+          </div>
+        </div>
+        <div id="listaAtrasosPendentes" class="master-pending"></div>
+      </div>
+
       <div class="section-title" style="justify-content: space-between;">
         <div style="display:flex; align-items:center; gap:10px;">Finalizados <span class="badge-count" id="countFinalizados">0</span></div>
         <input type="text" id="buscaFinalizados" placeholder="Buscar por nome/placa ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
       </div>
-      <table>
-        <thead><tr><th>Nome / Placa</th><th>Pedido</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>NF de Saída</th><th>Observação</th><th>Usuário Responsável</th></tr></thead>
-        <tbody id="tabelaFinalizados"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome / Placa</th><th>Pedido</th><th>Tipo Retirada</th><th>Entrada</th><th>Saída</th><th>Tempo total</th><th>NF de Saída</th><th>Observação</th><th>Motivo Atraso</th><th>Obs. Atraso</th><th>Usuário Responsável</th></tr></thead>
+          <tbody id="tabelaFinalizados"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- ========== ABA INDICADORES ========== -->
@@ -251,11 +283,12 @@
         <div class="card"><div class="label">Tempo médio</div><div class="value" id="kpiMedio">-</div></div>
         <div class="card"><div class="label">Maior tempo</div><div class="value" id="kpiMaior">-</div></div>
         <div class="card"><div class="label">Menor tempo</div><div class="value" id="kpiMenor">-</div></div>
-        <div class="card"><div class="label">Médio por dia</div><div class="value" id="kpiMedioDia">-</div></div>
+        <div class="card"><div class="label">Tempo médio diário</div><div class="value" id="kpiMedioDia">-</div></div>
+        <div class="card"><div class="label">Média clientes/dia</div><div class="value" id="kpiClientesDia">-</div></div>
       </div>
 
       <div class="card" style="margin-top:20px;">
-        <div class="label" style="margin-bottom:10px;">Tempo médio de permanência por dia</div>
+        <div class="label" style="margin-bottom:10px;">Tempo médio e clientes atendidos por dia</div>
         <div id="chartPorDia"></div>
       </div>
 
@@ -308,6 +341,46 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: JUSTIFICAR ATRASO (MASTER) ===================== -->
+<div id="modalJustificarAtraso" class="modal-overlay hidden">
+  <div class="modal" style="max-width:500px;">
+    <h2>Justificar atendimento atrasado</h2>
+    <div id="atrasoResumo" style="font-size:13px; color:var(--text-muted); margin-bottom:16px;"></div>
+    <div class="field">
+      <label>Motivo do atraso *</label>
+      <select id="atrasoMotivo"></select>
+    </div>
+    <div class="field">
+      <label>Observação do responsável *</label>
+      <textarea id="atrasoObservacao" placeholder="Explique objetivamente o que causou a demora..."></textarea>
+    </div>
+    <div id="atrasoErro" class="error-msg hidden"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="fecharModalJustificarAtraso()">Cancelar</button>
+      <button class="btn" id="btnSalvarJustificativa" onclick="salvarJustificativaAtraso()">Salvar justificativa</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: MOTIVOS DE ATRASO (MASTER) ===================== -->
+<div id="modalMotivos" class="modal-overlay hidden">
+  <div class="modal" style="max-width:500px;">
+    <h2>Motivos de atraso</h2>
+    <div class="field">
+      <label>Cadastrar novo motivo</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="novoMotivoAtraso" placeholder="Ex: Aguardando separação">
+        <button class="btn" onclick="cadastrarMotivoAtraso()">Adicionar</button>
+      </div>
+    </div>
+    <div id="motivoErro" class="error-msg hidden"></div>
+    <div id="listaMotivosAtraso" style="max-height:280px; overflow:auto; margin-top:12px;"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="fecharModalMotivos()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: ADMIN ===================== -->
 <div id="modalAdmin" class="modal-overlay hidden">
   <div class="modal" style="max-width:460px;">
@@ -326,6 +399,10 @@
         <div style="display:flex; gap:8px;">
           <input type="text" id="adminNovoNome" placeholder="Nome">
           <input type="text" id="adminNovoPin" placeholder="PIN" style="max-width:100px;">
+          <select id="adminNovoPerfil" style="max-width:160px;">
+            <option value="PORTARIA">Portaria</option>
+            <option value="MASTER">Master Portaria</option>
+          </select>
           <button class="btn" style="padding:12px 14px;" onclick="adminCadastrar()">+</button>
         </div>
         <div id="adminAddErro" class="error-msg hidden"></div>
@@ -373,6 +450,8 @@ let pollInterval = null;
 let loginEmAndamento = false;
 let registroEntradaEmAndamento = false;
 const LIMITE_ATRASO_MINUTOS = 30;
+let motivosAtraso = [];
+let atrasoIdAtual = null;
 
 // ================== LOGIN POR PIN ==================
 function montarKeypad() {
@@ -415,7 +494,12 @@ async function validarPinLogin() {
   try {
     const resp = await chamarApi({ action: 'validarPin', pin: pinDigitado });
     if (resp.ok) {
-      operadorAtual = { pin: pinDigitado, nome: resp.nome };
+      operadorAtual = {
+        pin: pinDigitado,
+        nome: resp.nome,
+        perfil: String(resp.perfil || '').toUpperCase(),
+        master: resp.master === true || resp.portariaMaster === true || String(resp.perfil || '').toUpperCase() === 'MASTER'
+      };
       entrarNoApp();
     } else {
       el.textContent = resp.erro || 'PIN inválido';
@@ -438,7 +522,10 @@ function entrarNoApp() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('operadorBadge').textContent = operadorAtual.nome;
+  document.getElementById('masterBadge').classList.toggle('hidden', !ehMaster());
+  document.getElementById('painelMasterAtrasos').classList.toggle('hidden', !ehMaster());
   carregarTudo();
+  if (ehMaster()) carregarMotivosAtraso();
   pollInterval = setInterval(carregarTudo, 20000);
   cronometroInterval = setInterval(atualizarCronometros, 1000);
   iniciarRelogio();
@@ -516,6 +603,7 @@ async function carregarTudo() {
     renderAtivos();
     renderFinalizados();
     renderKpisOperacao();
+    renderAtrasosMaster();
     if (!document.getElementById('painelIndicadores').classList.contains('hidden')) renderIndicadores();
   } catch (e) { console.error(e); }
 }
@@ -531,6 +619,7 @@ function montarFiltroMes() {
       finalizadosCache[mesSelecionado] = respFin.finalizados || [];
     }
     renderFinalizados();
+    renderAtrasosMaster();
     renderIndicadores();
   };
 }
@@ -578,31 +667,44 @@ function renderFinalizados() {
   const busca = (document.getElementById('buscaFinalizados').value || '').toLowerCase();
   const lista = (finalizadosCache[mesSelecionado] || []).filter(f =>
     !busca || f.nome.toLowerCase().includes(busca) || String(f.pedido).toLowerCase().includes(busca)
-  ).sort((a,b) => new Date(b.entrada) - new Date(a.entrada));
+  ).sort((a,b) => new Date(b.saida || b.entrada) - new Date(a.saida || a.entrada));
   document.getElementById('countFinalizados').textContent = lista.length;
-  document.getElementById('tabelaFinalizados').innerHTML = lista.map(f => `
-    <tr>
+  document.getElementById('tabelaFinalizados').innerHTML = lista.map(f => {
+    const atrasado = Number(f.minutos) > LIMITE_ATRASO_MINUTOS;
+    const pendente = atrasado && (!String(f.motivoAtraso || '').trim() || !String(f.observacaoAtraso || '').trim());
+    const classe = pendente ? 'row-atrasado-pendente' : (atrasado ? 'row-atrasado' : '');
+    const motivo = atrasado ? (f.motivoAtraso || '⚠ Pendente de justificativa') : '-';
+    const obsAtraso = atrasado ? (f.observacaoAtraso || '⚠ Pendente de justificativa') : '-';
+    return `
+    <tr class="${classe}">
       <td>${escapeHtml(f.nome)}</td>
       <td>${escapeHtml(f.pedido)}</td>
+      <td><span class="pill">${escapeHtml(f.tipoRetirada || '-')}</span></td>
       <td>${dataHoraCurta(f.entrada)}</td>
       <td>${dataHoraCurta(f.saida)}</td>
-      <td>${f.tempoPermanencia}</td>
+      <td>${escapeHtml(f.tempoPermanencia || formatarMin(Number(f.minutos)||0))}</td>
       <td>${escapeHtml(f.nfSaida || '-')}</td>
       <td>${escapeHtml(f.observacao || '-')}</td>
+      <td>${escapeHtml(motivo)}</td>
+      <td>
+        <div>${escapeHtml(obsAtraso)}</div>
+        ${f.operadorJustificativa ? `<div style="color:var(--text-muted); font-size:11px; margin-top:4px;">Justificado por ${escapeHtml(f.operadorJustificativa)}</div>` : ''}
+      </td>
       <td style="font-size:12px;">
         <div>${escapeHtml(f.operadorEntrada||'-')}</div>
         <div style="color:var(--text-muted);">Resp. Entrada</div>
         <div style="margin-top:6px;">${escapeHtml(f.operadorSaida||'-')}</div>
         <div style="color:var(--text-muted);">Resp. Saída</div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
+
 function renderKpisOperacao() {
-  const hoje = new Date().toDateString();
-  const finHoje = (finalizadosCache[mesSelecionado]||[]).filter(f => new Date(f.entrada).toDateString() === hoje).length;
-  const ativosHoje = ativos.filter(a => new Date(a.entrada).toDateString() === hoje).length;
-  document.getElementById('kpiHoje').textContent = finHoje + ativosHoje;
+  // REGRA: "Atendidos hoje" = clientes que tiveram a SAÍDA registrada hoje.
+  const hoje = dataChaveLocal(new Date().toISOString());
+  const finHoje = (finalizadosCache[mesSelecionado]||[]).filter(f => dataChaveLocal(f.saida) === hoje).length;
+  document.getElementById('kpiHoje').textContent = finHoje;
   document.getElementById('kpiNoCd').textContent = ativos.length;
 }
 
@@ -678,9 +780,11 @@ function renderIndicadores() {
   let lista = (finalizadosCache[mesSelecionado] || []).filter(f => {
     if (nomeF && !f.nome.toLowerCase().includes(nomeF)) return false;
     if (pedidoF && !String(f.pedido).toLowerCase().includes(pedidoF)) return false;
-    if (diaF && new Date(f.entrada).toISOString().slice(0,10) !== diaF) return false;
+    // REGRA: atendimento conta no dia em que a SAÍDA foi registrada.
+    if (diaF && dataChaveLocal(f.saida) !== diaF) return false;
     return true;
   });
+
   const minutos = lista.map(f => Number(f.minutos)).filter(n => !isNaN(n));
   document.getElementById('kpiTotal').textContent = lista.length;
   document.getElementById('kpiAtual').textContent = ativos.length;
@@ -688,20 +792,25 @@ function renderIndicadores() {
   document.getElementById('kpiMaior').textContent = minutos.length ? formatarMin(Math.max(...minutos)) : '-';
   document.getElementById('kpiMenor').textContent = minutos.length ? formatarMin(Math.min(...minutos)) : '-';
 
-  // agrega por dia (agregação client-side, sem depender do backend)
+  // Agrega por DATA DE SAÍDA: média de permanência + quantidade atendida.
   const porDia = {};
   lista.forEach(f => {
-    const dia = new Date(f.entrada).toISOString().slice(0,10);
-    if (!porDia[dia]) porDia[dia] = [];
-    porDia[dia].push(Number(f.minutos)||0);
+    const dia = dataChaveLocal(f.saida);
+    if (!dia) return;
+    if (!porDia[dia]) porDia[dia] = { minutos: [], quantidade: 0 };
+    porDia[dia].minutos.push(Number(f.minutos)||0);
+    porDia[dia].quantidade++;
   });
   const dias = Object.keys(porDia).sort();
-  const medias = dias.map(d => Math.round(porDia[d].reduce((a,b)=>a+b,0)/porDia[d].length));
+  const medias = dias.map(d => Math.round(porDia[d].minutos.reduce((a,b)=>a+b,0)/porDia[d].minutos.length));
+  const quantidades = dias.map(d => porDia[d].quantidade);
   document.getElementById('kpiMedioDia').textContent = medias.length ? formatarMin(Math.round(medias.reduce((a,b)=>a+b,0)/medias.length)) : '-';
+  document.getElementById('kpiClientesDia').textContent = quantidades.length ? Math.round((quantidades.reduce((a,b)=>a+b,0)/quantidades.length) * 10) / 10 : '-';
 
-  renderGraficoPorDia(dias, medias);
+  renderGraficoPorDia(dias, medias, quantidades);
   renderGraficoPorUsuario(lista);
 }
+
 let chartInstanceUsuario = null;
 function renderGraficoPorUsuario(lista) {
   // Baseado nos registros finalizados do período filtrado (dia/mês).
@@ -738,25 +847,186 @@ function renderGraficoPorUsuario(lista) {
   chartInstanceUsuario.render();
 }
 let chartInstance = null;
-function renderGraficoPorDia(dias, medias) {
+function renderGraficoPorDia(dias, medias, quantidades) {
+  const categorias = dias.map(d => {
+    const [ano,mes,dia] = d.split('-');
+    return `${dia}/${mes}`;
+  });
   const opts = {
-    chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent' },
+    chart: { type: 'line', height: 290, toolbar: { show: false }, background: 'transparent' },
     theme: { mode: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
-    series: [{ name: 'Tempo médio', data: medias }],
-    xaxis: { categories: dias },
-    yaxis: { labels: { show: false } },
+    series: [
+      { name: 'Tempo médio', type: 'column', data: medias },
+      { name: 'Clientes atendidos', type: 'line', data: quantidades }
+    ],
+    xaxis: { categories: categorias },
+    yaxis: [
+      { labels: { show: false }, title: { text: 'Tempo médio' } },
+      { opposite: true, labels: { show: false }, title: { text: 'Clientes' } }
+    ],
     grid: { show: false },
-    colors: ['#ff6a2b'],
+    colors: ['#ff6a2b', '#34d399'],
+    stroke: { width: [0, 3], curve: 'smooth' },
+    markers: { size: [0, 4] },
     dataLabels: {
       enabled: true,
-      formatter: function (val) { return formatarMin(val); },
-      style: { fontSize: '12px', fontWeight: 600, colors: ['#ffffff'] },
-      offsetY: 20
-    }
+      formatter: function (val, opts) {
+        return opts.seriesIndex === 0 ? formatarMin(Math.round(val)) : `${Math.round(val)} cli.`;
+      },
+      style: { fontSize: '11px', fontWeight: 600, colors: ['#ffffff'] },
+      offsetY: -4
+    },
+    tooltip: {
+      shared: true,
+      y: [
+        { formatter: val => formatarMin(Math.round(val)) },
+        { formatter: val => `${Math.round(val)} clientes` }
+      ]
+    },
+    legend: { position: 'top' }
   };
   document.getElementById('chartPorDia').innerHTML = '';
   chartInstance = new ApexCharts(document.querySelector('#chartPorDia'), opts);
   chartInstance.render();
+}
+
+// ================== MASTER PORTARIA / ATRASOS ==================
+function ehMaster() {
+  return !!(operadorAtual && operadorAtual.master);
+}
+
+function renderAtrasosMaster() {
+  const painel = document.getElementById('painelMasterAtrasos');
+  if (!painel) return;
+  painel.classList.toggle('hidden', !ehMaster());
+  if (!ehMaster()) return;
+
+  const lista = (finalizadosCache[mesSelecionado] || [])
+    .filter(f => Number(f.minutos) > LIMITE_ATRASO_MINUTOS)
+    .filter(f => !String(f.motivoAtraso || '').trim() || !String(f.observacaoAtraso || '').trim())
+    .sort((a,b) => new Date(b.saida || b.entrada) - new Date(a.saida || a.entrada));
+
+  document.getElementById('countAtrasosPendentes').textContent = lista.length;
+  document.getElementById('listaAtrasosPendentes').innerHTML = lista.map(f => `
+    <div class="master-pending-item">
+      <div>
+        <b>${escapeHtml(f.nome)} · Pedido ${escapeHtml(f.pedido)}</b>
+        <div class="meta">Saída ${dataHoraCurta(f.saida)} · Permanência ${escapeHtml(f.tempoPermanencia || formatarMin(Number(f.minutos)||0))} · ${escapeHtml(f.tipoRetirada || '-')}</div>
+      </div>
+      <button class="btn" onclick="abrirModalJustificarAtraso('${f.id}')">Justificar atraso</button>
+    </div>
+  `).join('') || '<div style="color:var(--green); font-size:13px; padding-top:12px;">✓ Nenhum atraso pendente de justificativa.</div>';
+}
+
+async function carregarMotivosAtraso() {
+  if (!ehMaster()) return;
+  try {
+    const resp = await chamarApi({ action: 'listarMotivosAtraso', pin: operadorAtual.pin });
+    if (resp && resp.ok === false) throw new Error(resp.erro || 'Erro ao carregar motivos');
+    motivosAtraso = (resp.motivos || []).map(m => typeof m === 'string' ? m : (m.motivo || m.nome || '')).filter(Boolean);
+    preencherSelectMotivos();
+    renderListaMotivos();
+  } catch (e) {
+    console.warn('Motivos de atraso ainda não disponíveis no backend:', e);
+    motivosAtraso = [];
+    preencherSelectMotivos();
+  }
+}
+
+function preencherSelectMotivos() {
+  const sel = document.getElementById('atrasoMotivo');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecione...</option>' + motivosAtraso.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+}
+
+function abrirModalJustificarAtraso(id) {
+  if (!ehMaster()) return;
+  const registro = (finalizadosCache[mesSelecionado] || []).find(f => String(f.id) === String(id));
+  if (!registro) return;
+  atrasoIdAtual = id;
+  document.getElementById('atrasoResumo').innerHTML = `<b>${escapeHtml(registro.nome)}</b> · Pedido ${escapeHtml(registro.pedido)}<br>Saída: ${dataHoraCurta(registro.saida)} · Permanência: ${escapeHtml(registro.tempoPermanencia || formatarMin(Number(registro.minutos)||0))}`;
+  document.getElementById('atrasoMotivo').value = registro.motivoAtraso || '';
+  document.getElementById('atrasoObservacao').value = registro.observacaoAtraso || '';
+  document.getElementById('atrasoErro').classList.add('hidden');
+  if (!motivosAtraso.length) carregarMotivosAtraso();
+  document.getElementById('modalJustificarAtraso').classList.remove('hidden');
+}
+
+function fecharModalJustificarAtraso() {
+  document.getElementById('modalJustificarAtraso').classList.add('hidden');
+  atrasoIdAtual = null;
+}
+
+async function salvarJustificativaAtraso() {
+  if (!ehMaster() || !atrasoIdAtual) return;
+  const motivo = document.getElementById('atrasoMotivo').value.trim();
+  const observacao = document.getElementById('atrasoObservacao').value.trim();
+  const erroEl = document.getElementById('atrasoErro');
+  if (!motivo || !observacao) {
+    erroEl.textContent = 'Motivo e observação são obrigatórios.';
+    erroEl.classList.remove('hidden');
+    return;
+  }
+  const btn = document.getElementById('btnSalvarJustificativa');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  try {
+    const resp = await chamarApi({
+      action: 'salvarJustificativaAtraso',
+      id: atrasoIdAtual,
+      pin: operadorAtual.pin,
+      motivo,
+      observacao
+    });
+    if (!resp.ok) throw new Error(resp.erro || 'Erro ao salvar justificativa.');
+    fecharModalJustificarAtraso();
+    await carregarTudo();
+  } catch (e) {
+    erroEl.textContent = e.message || 'Não foi possível salvar a justificativa.';
+    erroEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar justificativa';
+  }
+}
+
+async function abrirModalMotivos() {
+  if (!ehMaster()) return;
+  document.getElementById('novoMotivoAtraso').value = '';
+  document.getElementById('motivoErro').classList.add('hidden');
+  document.getElementById('modalMotivos').classList.remove('hidden');
+  await carregarMotivosAtraso();
+}
+
+function fecharModalMotivos() {
+  document.getElementById('modalMotivos').classList.add('hidden');
+}
+
+function renderListaMotivos() {
+  const div = document.getElementById('listaMotivosAtraso');
+  if (!div) return;
+  div.innerHTML = motivosAtraso.map(m => `<div class="motivo-row"><span>${escapeHtml(m)}</span><span class="status ativo">Ativo</span></div>`).join('') || '<div style="color:var(--text-muted); font-size:13px;">Nenhum motivo cadastrado.</div>';
+}
+
+async function cadastrarMotivoAtraso() {
+  if (!ehMaster()) return;
+  const motivo = document.getElementById('novoMotivoAtraso').value.trim();
+  const erroEl = document.getElementById('motivoErro');
+  if (!motivo) {
+    erroEl.textContent = 'Informe o motivo.';
+    erroEl.classList.remove('hidden');
+    return;
+  }
+  try {
+    const resp = await chamarApi({ action: 'cadastrarMotivoAtraso', pin: operadorAtual.pin, motivo });
+    if (!resp.ok) throw new Error(resp.erro || 'Erro ao cadastrar motivo.');
+    erroEl.classList.add('hidden');
+    document.getElementById('novoMotivoAtraso').value = '';
+    await carregarMotivosAtraso();
+  } catch (e) {
+    erroEl.textContent = e.message || 'Não foi possível cadastrar o motivo.';
+    erroEl.classList.remove('hidden');
+  }
 }
 
 // ================== ADMIN ==================
@@ -787,7 +1057,7 @@ function renderListaAdmin(pins) {
     <div class="admin-row">
       <div>
         <b>${escapeHtml(p.nome)}</b>
-        <div style="font-size:12px; color:var(--text-muted);">PIN ${escapeHtml(String(p.pin))}</div>
+        <div style="font-size:12px; color:var(--text-muted);">PIN ${escapeHtml(String(p.pin))} · ${escapeHtml(p.perfil || 'PORTARIA')}</div>
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         <span class="status ${p.ativo ? 'ativo':'inativo'}">${p.ativo ? 'Ativo':'Inativo'}</span>
@@ -799,13 +1069,15 @@ function renderListaAdmin(pins) {
 async function adminCadastrar() {
   const nome = document.getElementById('adminNovoNome').value.trim();
   const pin = document.getElementById('adminNovoPin').value.trim();
+  const perfil = document.getElementById('adminNovoPerfil').value;
   const erroEl = document.getElementById('adminAddErro');
   if (!nome || !pin) { erroEl.textContent = 'Informe nome e PIN.'; erroEl.classList.remove('hidden'); return; }
-  const resp = await chamarApi({ action: 'adminAddPin', adminPin: adminPinAtual, nome, pin });
+  const resp = await chamarApi({ action: 'adminAddPin', adminPin: adminPinAtual, nome, pin, perfil });
   if (resp.erro) { erroEl.textContent = resp.erro; erroEl.classList.remove('hidden'); return; }
   erroEl.classList.add('hidden');
   document.getElementById('adminNovoNome').value = '';
   document.getElementById('adminNovoPin').value = '';
+  document.getElementById('adminNovoPerfil').value = 'PORTARIA';
   const lista = await chamarApi({ action: 'adminListarPins', adminPin: adminPinAtual });
   renderListaAdmin(lista.pins);
 }
@@ -819,6 +1091,7 @@ async function adminToggle(pin) {
 function escapeHtml(s) { return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function horaCurta(iso) { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); }
 function dataHoraCurta(iso) { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + horaCurta(iso); }
+function dataChaveLocal(iso) { if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return ''; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function formatarMin(min) { const h = Math.floor(min/60), m = min%60; return h>0 ? `${h}h ${m}min` : `${m}min`; }
 
 montarKeypad();
