@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -301,7 +302,7 @@
           <div>
             <div class="label">MASTER PORTARIA</div>
             <div style="font-size:16px; font-weight:700; margin-top:5px;">Justificativas de atrasos <span class="badge-count" id="countAtrasosPendentes">0</span></div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Todo atendimento finalizado acima de 30 minutos precisa de motivo e observação.</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Todo atendimento finalizado acima de <span data-limite-atraso>60</span> minutos precisa de motivo e observação.</div>
           </div>
           <div class="master-actions">
             <button class="btn secondary" onclick="abrirModalMotivos()">⚙ Motivos de atraso</button>
@@ -520,9 +521,15 @@ let cronometroInterval = null;
 let pollInterval = null;
 let loginEmAndamento = false;
 let registroEntradaEmAndamento = false;
-const LIMITE_ATRASO_MINUTOS = 30;
+const LIMITE_ATRASO_MINUTOS = 60;
 let motivosAtraso = [];
 let atrasoIdAtual = null;
+
+function aplicarTextosLimiteAtraso() {
+  document.querySelectorAll('[data-limite-atraso]').forEach(el => {
+    el.textContent = LIMITE_ATRASO_MINUTOS;
+  });
+}
 
 // ================== LOGIN POR PIN ==================
 function montarKeypad() {
@@ -711,7 +718,7 @@ function renderAtivos() {
         <b>${escapeHtml(a.nome)}</b>
         <div>Pedido ${escapeHtml(a.pedido)} · Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
         ${a.observacao ? `<div class="obs-line">Obs: ${escapeHtml(a.observacao)}</div>` : ''}
-        <div class="atraso-label hidden" data-atraso>⚠ Atendimento atrasado — mais de 30 minutos</div>
+        <div class="atraso-label hidden" data-atraso>⚠ Atendimento atrasado — mais de ${LIMITE_ATRASO_MINUTOS} minutos</div>
       </div>
       <div style="display:flex; align-items:center;">
         <span class="time-pill" data-cron>0min</span>
@@ -1250,6 +1257,7 @@ function dataHoraCurta(iso) { if (!iso) return '-'; const d = new Date(iso); ret
 function dataChaveLocal(iso) { if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return ''; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function formatarMin(min) { const h = Math.floor(min/60), m = min%60; return h>0 ? `${h}h ${m}min` : `${m}min`; }
 
+aplicarTextosLimiteAtraso();
 montarKeypad();
 </script>
 </body>
