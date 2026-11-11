@@ -374,6 +374,47 @@
     .bays { grid-template-columns:1fr; }
     .bay { grid-template-columns:minmax(0, 36%) minmax(0, 1fr); }
   }
+
+  /* ---------- Cabeçalho dos finalizados numa linha só ---------- */
+  .fin-tools { flex-wrap:nowrap; }
+  .fin-tools input { width:280px; }
+
+  /* ---------- Aba Telão: indicadores + doca ao vivo + gráfico numa tela ---------- */
+  body.modo-telao main { max-width:none; }
+  :fullscreen nav.tabs { display:none; }
+  .tv-grid { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); gap:16px; align-items:start; margin-top:14px; }
+  .tv-grid .section-title { margin-top:0; justify-content:space-between; }
+  .tv-grid .section-title .btn { padding:7px 12px; font-size:12px; }
+  #tvAtivos { grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); }
+  .tv-mes { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin-top:6px; padding-top:12px; border-top:1px solid var(--card-border); }
+  .tv-mes .value { font-size:22px; margin-top:2px; }
+  #tvChartPorDia { min-height:300px; }
+  @media (min-width: 1500px) {
+    #painelTelao .kpi-strip .card { padding:14px 20px; }
+    #painelTelao .kpi-strip .label, #painelTelao .kpi-strip .sub { font-size:13px; }
+    #painelTelao .kpi-strip .value { font-size:38px; }
+    #tvAtivos { grid-template-columns:repeat(auto-fill, minmax(420px, 1fr)); }
+    #tvAtivos .bay-scene { min-height:108px; }
+    #tvAtivos .bay-info b { font-size:19px; }
+    #tvAtivos .bay-info div { font-size:13px; }
+    #tvAtivos .bay-status { font-size:12px !important; }
+    #tvAtivos .ring, #tvAtivos .ring svg { width:70px; height:70px; }
+    #tvAtivos .ring span { font-size:15px; }
+    .tv-mes .value { font-size:28px; }
+  }
+  @media (min-width: 1500px) and (min-height: 900px) {
+    #tvAtivos .bay-scene { min-height:150px; }
+    #tvAtivos .bay-info b { font-size:22px; }
+    #tvAtivos .bay-info div { font-size:15px; }
+    #tvAtivos .bay-status { font-size:13px !important; }
+    #tvAtivos .ring, #tvAtivos .ring svg { width:86px; height:86px; }
+    #tvAtivos .ring span { font-size:18px; }
+    #tvAtivos .bay-body { padding:12px 18px; }
+    #tvAtivos .bay { grid-template-columns:minmax(0, 36%) minmax(0, 1fr); }
+  }
+  @media (max-width: 1000px) { .tv-grid { grid-template-columns:1fr; } }
+  @media (max-width: 700px) { .fin-tools { flex-wrap:wrap; } .fin-tools input { width:100%; } }
+
   @media (prefers-reduced-motion: reduce) {
     .bay, .bay-scene *, .kpi-bump, .atraso-pendente { animation:none !important; }
     .bay.atrasado .bay-scene .box, .bay.saindo .bay-scene .box { opacity:0; }
@@ -426,6 +467,7 @@
   <nav class="tabs">
     <button id="tabOperacaoBtn" class="active" onclick="mudarAba('operacao')">Operação</button>
     <button id="tabIndicadoresBtn" onclick="mudarAba('indicadores')">Indicadores</button>
+    <button id="tabTelaoBtn" onclick="mudarAba('telao')">Telão</button>
   </nav>
 
   <main>
@@ -545,6 +587,62 @@
       <div class="card" style="margin-top:20px;">
         <div class="label" style="margin-bottom:10px;">Entradas e saídas por usuário</div>
         <div id="chartPorUsuario"></div>
+      </div>
+    </section>
+
+    <!-- ========== ABA TELÃO ========== -->
+    <section id="painelTelao" class="hidden">
+      <div class="kpi-strip">
+        <div class="card">
+          <div class="label">No CD agora</div>
+          <div class="value" id="tv_kpiNoCd" style="color:var(--accent)">0</div>
+          <div class="sub">veículos na doca</div>
+        </div>
+        <div class="card">
+          <div class="label">Atendidos hoje</div>
+          <div class="value" id="tv_kpiHoje">0</div>
+          <div class="sub">saídas registradas</div>
+        </div>
+        <div class="card" id="tv_cardMaiorEspera">
+          <div class="label">Maior espera agora</div>
+          <div class="value" id="tv_kpiMaiorEspera">-</div>
+          <div class="sub" id="tv_kpiMaiorEsperaNome"></div>
+        </div>
+        <div class="card" id="tv_cardAtrasados">
+          <div class="label">Atrasados agora</div>
+          <div class="value" id="tv_kpiAtrasadosAgora">0</div>
+          <div class="sub">acima de <span data-limite-atraso>60</span> min</div>
+        </div>
+        <div class="card">
+          <div class="label">Tempo médio hoje</div>
+          <div class="value" id="tv_kpiMedioHoje">-</div>
+          <div class="sub">dos atendidos hoje</div>
+        </div>
+      </div>
+
+      <div class="tv-grid">
+        <div>
+          <div class="section-title">
+            <div style="display:flex; align-items:center; gap:10px;">Na doca agora <span class="badge-count" id="tv_countAtivos">0</span></div>
+            <button type="button" class="btn secondary" onclick="alternarTelaCheia()">⛶ Tela cheia</button>
+          </div>
+          <div id="tvAtivos" class="bays"></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head">
+            <div>
+              <div class="label">Mês <span id="tv_mesLabel"></span></div>
+              <div style="font-size:16px;font-weight:800;margin-top:4px;">Desempenho diário do Retira</div>
+            </div>
+            <div class="chart-help">Barras = tempo médio &nbsp;•&nbsp; Linha = clientes atendidos</div>
+          </div>
+          <div id="tvChartPorDia"></div>
+          <div class="tv-mes">
+            <div><div class="label">Atendidos no mês</div><div class="value" id="tv_mesTotal">0</div></div>
+            <div><div class="label">Tempo mediano</div><div class="value" id="tv_mesMediana">-</div></div>
+            <div><div class="label">Média clientes/dia</div><div class="value" id="tv_mesClientesDia">-</div></div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -816,6 +914,7 @@ function logout() {
   relogioAtivo = false;
   idsAtivosVistos = null;
   assinaturaAtivos = null;
+  assinaturaTelao = null;
   document.getElementById('app').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
 }
@@ -830,6 +929,7 @@ function toggleTheme() {
   localStorage.setItem('controleRetiraTema', novo);
   // Recria os gráficos para aplicar automaticamente a paleta do tema atual.
   if (!document.getElementById('painelIndicadores').classList.contains('hidden')) renderIndicadores();
+  renderTelao(true);
 }
 (function initTheme() {
   const salvo = localStorage.getItem('controleRetiraTema');
@@ -842,7 +942,11 @@ function mudarAba(aba) {
   document.getElementById('painelIndicadores').classList.toggle('hidden', aba !== 'indicadores');
   document.getElementById('tabOperacaoBtn').classList.toggle('active', aba === 'operacao');
   document.getElementById('tabIndicadoresBtn').classList.toggle('active', aba === 'indicadores');
+  document.getElementById('painelTelao').classList.toggle('hidden', aba !== 'telao');
+  document.getElementById('tabTelaoBtn').classList.toggle('active', aba === 'telao');
+  document.body.classList.toggle('modo-telao', aba === 'telao');
   if (aba === 'indicadores') renderIndicadores();
+  if (aba === 'telao') renderTelao(true);
 }
 
 // ================== CARREGAR DADOS ==================
@@ -865,6 +969,7 @@ async function carregarTudo() {
     renderKpisOperacao();
     renderAtrasosMaster();
     if (!document.getElementById('painelIndicadores').classList.contains('hidden')) renderIndicadores();
+    renderTelao();
   } catch (e) { console.error(e); }
 }
 function montarFiltroMes() {
@@ -915,25 +1020,9 @@ function cenaDoca() {
   </svg>`;
 }
 
-function renderAtivos() {
-  const busca = (document.getElementById('buscaInput').value || '').toLowerCase();
-  const lista = ativos.filter(a =>
-    !busca || String(a.nome).toLowerCase().includes(busca) || String(a.pedido).toLowerCase().includes(busca)
-  );
-  document.getElementById('countAtivos').textContent = ativos.length;
-
-  const assinatura = busca + '|' + lista.map(a => a.id + '~' + (a.observacao || '')).join(',');
-  if (assinatura === assinaturaAtivos) { atualizarCronometros(); return; }
-  assinaturaAtivos = assinatura;
-
-  const vistos = idsAtivosVistos || new Set();
-  let novos = 0;
-  const div = document.getElementById('listaAtivos');
-  div.innerHTML = lista.map(a => {
-    const chegando = !vistos.has(a.id);
-    const atraso = chegando ? (novos++ * 0.18).toFixed(2) : 0;
-    return `
-    <div class="bay${chegando ? ' chegando' : ''}" style="--d:${atraso}s" data-entrada="${a.entrada}" data-id="${a.id}">
+function htmlBay(a, chegando, atraso, comBotao) {
+  return `
+    <div class="bay${chegando ? ' chegando' : ''}" style="--d:${Number(atraso).toFixed(2)}s" data-entrada="${a.entrada}" data-id="${a.id}">
       ${cenaDoca()}
       <div class="bay-body">
         <div class="bay-info">
@@ -952,25 +1041,81 @@ function renderAtivos() {
             </svg>
             <span data-cron>0:00</span>
           </div>
-          <button class="btn secondary" onclick="abrirModalSaida('${a.id}')">↩ Saída</button>
+          ${comBotao ? `<button class="btn secondary" onclick="abrirModalSaida('${a.id}')">↩ Saída</button>` : ''}
         </div>
       </div>
     </div>`;
-  }).join('') || `<div class="bay-empty">${ativos.length ? 'Nenhum cliente encontrado na busca.' : 'Doca livre — nenhum cliente em atendimento no momento.'}</div>`;
+}
 
+function renderAtivos() {
+  const busca = (document.getElementById('buscaInput').value || '').toLowerCase();
+  const lista = ativos.filter(a =>
+    !busca || String(a.nome).toLowerCase().includes(busca) || String(a.pedido).toLowerCase().includes(busca)
+  );
+  document.getElementById('countAtivos').textContent = ativos.length;
+  document.getElementById('tv_countAtivos').textContent = ativos.length;
+  const vistos = idsAtivosVistos || new Set();
+
+  const assinatura = busca + '|' + lista.map(a => a.id + '~' + (a.observacao || '')).join(',');
+  if (assinatura !== assinaturaAtivos) {
+    assinaturaAtivos = assinatura;
+    let novos = 0;
+    document.getElementById('listaAtivos').innerHTML = lista.map(a => {
+      const chegando = !vistos.has(a.id);
+      return htmlBay(a, chegando, chegando ? novos++ * 0.18 : 0, true);
+    }).join('') || `<div class="bay-empty">${ativos.length ? 'Nenhum cliente encontrado na busca.' : 'Doca livre — nenhum cliente em atendimento no momento.'}</div>`;
+  }
+
+  renderDocaTelao(vistos);
   idsAtivosVistos = new Set(ativos.map(a => a.id));
   atualizarCronometros();
 }
 
+// Doca do telão: mesma cena, sem botão e sem busca. Quem saiu vai embora rodando antes de sumir.
+let assinaturaTelao = null;
+let saidaTelaoTimer = null;
+function renderDocaTelao(vistos) {
+  const div = document.getElementById('tvAtivos');
+  const assinatura = ativos.map(a => a.id + '~' + (a.observacao || '')).join(',');
+  if (assinatura === assinaturaTelao) return;
+  assinaturaTelao = assinatura;
+  const desenhar = () => {
+    saidaTelaoTimer = null;
+    let novos = 0;
+    div.innerHTML = ativos.map(a => {
+      const chegando = !vistos.has(a.id);
+      return htmlBay(a, chegando, chegando ? novos++ * 0.18 : 0, false);
+    }).join('') || '<div class="bay-empty">Doca livre — nenhum cliente em atendimento no momento.</div>';
+    atualizarCronometros();
+  };
+  const idsAtuais = new Set(ativos.map(a => a.id));
+  const saindo = [...div.querySelectorAll('.bay')].filter(el => !idsAtuais.has(el.dataset.id));
+  clearTimeout(saidaTelaoTimer);
+  if (saindo.length && !document.getElementById('painelTelao').classList.contains('hidden')) {
+    saindo.forEach(el => { el.classList.remove('chegando'); el.classList.add('saindo'); });
+    saidaTelaoTimer = setTimeout(desenhar, 1000);
+  } else {
+    desenhar();
+  }
+}
+
+// Os indicadores do momento existem na Operação (id) e no Telão ('tv_' + id).
+function setTxt(id, valor) {
+  [id, 'tv_' + id].forEach(i => { const el = document.getElementById(i); if (el) el.textContent = valor; });
+}
 function setKpi(id, valor) {
-  const el = document.getElementById(id);
-  if (!el) return;
   const v = String(valor);
-  if (el.textContent === v) return;
-  el.textContent = v;
-  el.classList.remove('kpi-bump');
-  void el.offsetWidth;
-  el.classList.add('kpi-bump');
+  [id, 'tv_' + id].forEach(i => {
+    const el = document.getElementById(i);
+    if (!el || el.textContent === v) return;
+    el.textContent = v;
+    el.classList.remove('kpi-bump');
+    void el.offsetWidth;
+    el.classList.add('kpi-bump');
+  });
+}
+function setAlerta(id, ligado) {
+  [id, 'tv_' + id].forEach(i => { const el = document.getElementById(i); if (el) el.classList.toggle('alerta', ligado); });
 }
 
 function formatarCronometro(ms) {
@@ -983,7 +1128,7 @@ function formatarCronometro(ms) {
 
 function atualizarCronometros() {
   const limiteMs = LIMITE_ATRASO_MINUTOS * 60000;
-  document.querySelectorAll('#listaAtivos .bay').forEach(el => {
+  document.querySelectorAll('.bays .bay').forEach(el => {
     const decorridoMs = Date.now() - new Date(el.getAttribute('data-entrada')).getTime();
     const ms = Number.isFinite(decorridoMs) ? Math.max(0, decorridoMs) : 0;
     const atrasado = ms > limiteMs;
@@ -1007,10 +1152,10 @@ function atualizarCronometros() {
   });
   setKpi('kpiNoCd', ativos.length);
   setKpi('kpiAtrasadosAgora', atrasados);
-  document.getElementById('kpiMaiorEspera').textContent = maiorMs >= 0 ? formatarMin(Math.floor(maiorMs / 60000)) : '-';
-  document.getElementById('kpiMaiorEsperaNome').textContent = maiorMs >= 0 ? maiorNome : 'ninguém aguardando';
-  document.getElementById('cardAtrasados').classList.toggle('alerta', atrasados > 0);
-  document.getElementById('cardMaiorEspera').classList.toggle('alerta', maiorMs > limiteMs);
+  setTxt('kpiMaiorEspera', maiorMs >= 0 ? formatarMin(Math.floor(maiorMs / 60000)) : '-');
+  setTxt('kpiMaiorEsperaNome', maiorMs >= 0 ? maiorNome : 'ninguém aguardando');
+  setAlerta('cardAtrasados', atrasados > 0);
+  setAlerta('cardMaiorEspera', maiorMs > limiteMs);
   document.getElementById('kpiAtual') && (document.getElementById('kpiAtual').textContent = ativos.length);
 }
 let periodoFinalizados = 'hoje'; // 'hoje' = saídas de hoje | 'mes' = mês selecionado inteiro
@@ -1082,7 +1227,8 @@ function renderKpisOperacao() {
   const minHoje = finHoje.map(f => Number(f.minutos)).filter(n => !isNaN(n));
   setKpi('kpiHoje', finHoje.length);
   setKpi('kpiNoCd', ativos.length);
-  document.getElementById('kpiMedioHoje').textContent = minHoje.length ? formatarMin(Math.round(minHoje.reduce((a,b)=>a+b,0)/minHoje.length)) : '-';
+  const medioHoje = minHoje.length ? formatarMin(Math.round(minHoje.reduce((a,b)=>a+b,0)/minHoje.length)) : '-';
+  setTxt('kpiMedioHoje', medioHoje);
 }
 
 // ================== MODAL NOVO CLIENTE ==================
@@ -1185,7 +1331,16 @@ function renderIndicadores() {
   document.getElementById('kpiMaior').textContent =minutos.length ? formatarMin(Math.max(...minutos)) : '-';
   document.getElementById('kpiMenor').textContent = minutos.length ? formatarMin(Math.min(...minutos)) : '-';
 
-  // Agrega por DATA DE SAÍDA: média de permanência + quantidade atendida.
+  const { dias, medias, quantidades } = agregarPorDia(lista);
+  document.getElementById('kpiMedioDia').textContent = medias.length ? formatarMin(Math.round(medias.reduce((a,b)=>a+b,0)/medias.length)) : '-';
+  document.getElementById('kpiClientesDia').textContent = quantidades.length ? Math.round((quantidades.reduce((a,b)=>a+b,0)/quantidades.length) * 10) / 10 : '-';
+
+  renderGraficoPorDia(dias, medias, quantidades);
+  renderGraficoPorUsuario(lista);
+}
+
+// Agrega por DATA DE SAÍDA: média de permanência + quantidade atendida em cada dia.
+function agregarPorDia(lista) {
   const porDia = {};
   lista.forEach(f => {
     const dia = dataChaveLocal(f.saida);
@@ -1195,13 +1350,38 @@ function renderIndicadores() {
     porDia[dia].quantidade++;
   });
   const dias = Object.keys(porDia).sort();
-  const medias = dias.map(d => Math.round(porDia[d].minutos.reduce((a,b)=>a+b,0)/porDia[d].minutos.length));
-  const quantidades = dias.map(d => porDia[d].quantidade);
-  document.getElementById('kpiMedioDia').textContent = medias.length ? formatarMin(Math.round(medias.reduce((a,b)=>a+b,0)/medias.length)) : '-';
-  document.getElementById('kpiClientesDia').textContent = quantidades.length ? Math.round((quantidades.reduce((a,b)=>a+b,0)/quantidades.length) * 10) / 10 : '-';
+  return {
+    dias,
+    medias: dias.map(d => Math.round(porDia[d].minutos.reduce((a,b)=>a+b,0)/porDia[d].minutos.length)),
+    quantidades: dias.map(d => porDia[d].quantidade)
+  };
+}
 
-  renderGraficoPorDia(dias, medias, quantidades);
-  renderGraficoPorUsuario(lista);
+// ================== TELÃO ==================
+let assinaturaChartTelao = null;
+function renderTelao(forcar) {
+  if (document.getElementById('painelTelao').classList.contains('hidden')) return;
+  const lista = finalizadosCache[mesSelecionado] || [];
+  const minutos = lista.map(f => Number(f.minutos)).filter(n => !isNaN(n)).sort((a,b) => a - b);
+  const meio = Math.floor(minutos.length / 2);
+  const mediana = minutos.length ? (minutos.length % 2 ? minutos[meio] : Math.round((minutos[meio - 1] + minutos[meio]) / 2)) : null;
+  const { dias, medias, quantidades } = agregarPorDia(lista);
+  document.getElementById('tv_mesLabel').textContent = mesSelecionado || '';
+  document.getElementById('tv_mesTotal').textContent = lista.length;
+  document.getElementById('tv_mesMediana').textContent = mediana === null ? '-' : formatarMin(mediana);
+  document.getElementById('tv_mesClientesDia').textContent = quantidades.length ? Math.round((quantidades.reduce((a,b)=>a+b,0)/quantidades.length) * 10) / 10 : '-';
+
+  // Só redesenha o gráfico quando os dados mudam, para não reiniciar a animação a cada atualização.
+  const assinatura = [mesSelecionado, dias.join(), medias.join(), quantidades.join()].join('|');
+  if (!forcar && assinatura === assinaturaChartTelao) return;
+  assinaturaChartTelao = assinatura;
+  // Altura do gráfico acompanha a tela: maior em 1080p, menor em telas baixas.
+  const alturaTelao = Math.max(300, Math.min(600, window.innerHeight - 470));
+  renderGraficoPorDia(dias, medias, quantidades, 'tvChartPorDia', alturaTelao);
+}
+function alternarTelaCheia() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
 }
 
 let chartInstanceUsuario = null;
@@ -1241,7 +1421,7 @@ function renderGraficoPorUsuario(lista) {
   chartInstanceUsuario.render();
 }
 let chartInstance = null;
-function renderGraficoPorDia(dias, medias, quantidades) {
+function renderGraficoPorDia(dias, medias, quantidades, alvoId = 'chartPorDia', altura = 330) {
   const categorias = dias.map(d => {
     const [ano,mes,dia] = d.split('-');
     return `${dia}/${mes}`;
@@ -1253,7 +1433,7 @@ function renderGraficoPorDia(dias, medias, quantidades) {
   const opts = {
     chart: {
       type: 'line',
-      height: 330,
+      height: altura,
       toolbar: { show: false },
       background: 'transparent',
       fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif',
@@ -1310,20 +1490,9 @@ function renderGraficoPorDia(dias, medias, quantidades) {
       formatter: function (val, opts) {
         return opts.seriesIndex === 0 ? `${Math.round(val)}m` : `${Math.round(val)}`;
       },
-      style: {
-        fontSize: '11px',
-        fontWeight: 800,
-        colors: [isLight ? '#7c2d12' : '#ffffff', isLight ? '#1e3a8a' : '#dbeafe']
-      },
-      background: {
-        enabled: true,
-        foreColor: isLight ? '#0f172a' : '#ffffff',
-        padding: 4,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: isLight ? '#e2e8f0' : '#334155',
-        opacity: isLight ? 0.96 : 0.88
-      },
+      // Etiqueta da coluna em laranja escuro e da linha em azul, ambas com texto branco.
+      style: { fontSize: '11px', fontWeight: 800, colors: ['#c2410c', '#1d4ed8'] },
+      background: { enabled: true, foreColor: '#ffffff', padding: 4, borderRadius: 4, borderWidth: 0, opacity: 1 },
       offsetY: -6
     },
     fill: { opacity: [0.92, 1] },
@@ -1346,9 +1515,10 @@ function renderGraficoPorDia(dias, medias, quantidades) {
     }
   };
 
-  document.getElementById('chartPorDia').innerHTML = '';
-  chartInstance = new ApexCharts(document.querySelector('#chartPorDia'), opts);
-  chartInstance.render();
+  document.getElementById(alvoId).innerHTML = '';
+  const grafico = new ApexCharts(document.getElementById(alvoId), opts);
+  if (alvoId === 'chartPorDia') chartInstance = grafico;
+  grafico.render();
 }
 
 // ================== MASTER PORTARIA / ATRASOS ==================
