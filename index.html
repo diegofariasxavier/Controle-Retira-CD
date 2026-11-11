@@ -6,6 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle Retira — Portaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
   :root {
@@ -225,6 +228,156 @@
     .table-wrap { overflow-x:auto; }
     .finalizados-table { min-width:820px; }
   }
+
+  /* ===================== REPAGINADA VISUAL ===================== */
+  :root {
+    --bg:#0d151d; --card:#151f29; --card-border:#2a3946; --text:#edf4f8; --text-muted:#99a7b4;
+    --accent:#ef7d22; --green:#2fbf8a; --green-bg:rgba(47,191,138,.14); --red:#f0625f; --amber:#e0a12a;
+    --input-bg:#0f1922; --brand:#0b2f4f; --brand2:#114e7a;
+    --scene-bg:#1b2732; --scene-wall:#51606e; --scene-floor:#3a4a59; --scene-dock:#2c3a47;
+    --shadow:0 14px 34px rgba(0,0,0,.28);
+  }
+  [data-theme="light"] {
+    --bg:#f3f6f8; --card:#ffffff; --card-border:#dfe6ec; --text:#162230; --text-muted:#667483;
+    --green:#16855b; --green-bg:rgba(22,133,91,.12); --red:#c64040; --amber:#c88709; --input-bg:#ffffff;
+    --scene-bg:#eef3f7; --scene-wall:#aab6c1; --scene-floor:#c9d3dc; --scene-dock:#dbe3ea;
+    --shadow:0 12px 32px rgba(20,42,61,.09);
+  }
+  body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  header { background: linear-gradient(120deg, var(--brand), var(--brand2)); color:#fff; border-bottom:none; }
+  .header-logo { height:50px; width:104px; object-fit:cover; background:#fff; padding:0 6px; border-radius:12px; }
+  .brand p { color: rgba(255,255,255,.75); }
+  .header-right { color:#fff; }
+  header .op-badge, header button.icon-btn { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.22); color:#fff; }
+  header #clockDate { color: rgba(255,255,255,.72) !important; }
+  header .master-tag { background: rgba(239,125,34,.28); color:#ffe1c7; }
+  nav.tabs { background: var(--card); }
+  .card { border-radius:18px; box-shadow: var(--shadow); }
+  .btn { border-radius:10px; transition: transform .12s ease, filter .15s ease; }
+  .btn:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn:active:not(:disabled) { transform: scale(.98); }
+  input[type=text], input[type=password], input[type=date], select, textarea { border-radius:10px; }
+  .table-wrap { border-radius:18px; box-shadow: var(--shadow); }
+  .modal { border-radius:18px; box-shadow: var(--shadow); }
+  .login-wrap { padding:16px; }
+  .login-card { max-width:380px; background:var(--card); border:1px solid var(--card-border); border-radius:22px; padding:28px; box-shadow:var(--shadow); }
+  .keypad button { border-radius:12px; transition: transform .1s ease, background .15s ease; }
+  .keypad button:active { transform: scale(.95); background: var(--card-border); }
+
+  /* ---------- Faixa de indicadores do momento ---------- */
+  .kpi-strip { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:14px; }
+  .kpi-strip .card { padding:16px 18px; }
+  .kpi-strip .value { font-variant-numeric: tabular-nums; }
+  .kpi-strip .sub { font-size:11px; color:var(--text-muted); margin-top:2px; min-height:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .kpi-strip .card.alerta { border-color: var(--red); }
+  .kpi-strip .card.alerta .value { color: var(--red); }
+  .kpi-bump { animation: kpiBump .5s ease; }
+  @keyframes kpiBump { 30% { transform: scale(1.14); } }
+  .kpi-strip .value { display:inline-block; transform-origin:left center; }
+
+  /* ---------- Doca: veículos em atendimento ---------- */
+  .bays { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:16px; }
+  .bay {
+    --st: var(--green);
+    background:var(--card); border:1px solid var(--card-border); border-radius:18px; overflow:hidden;
+    box-shadow:var(--shadow); transition:border-color .3s ease, box-shadow .3s ease;
+  }
+  .bay.atencao { --st: var(--amber); }
+  .bay.atrasado { --st: var(--red); border-color: var(--red); animation: bayGlow 2.4s ease-in-out infinite; }
+  @keyframes bayGlow { 50% { box-shadow: 0 0 0 4px rgba(240,98,95,.22), var(--shadow); } }
+  .bay-scene { display:block; width:100%; height:auto; background:var(--scene-bg); }
+  .bay-scene .sc-bar { fill: var(--st); }
+  .bay-scene .sc-wall { fill: var(--scene-wall); }
+  .bay-scene .sc-dock { fill: var(--scene-dock); }
+  .bay-scene .sc-floor { stroke: var(--scene-floor); }
+  .bay-scene .sc-roller { fill: var(--scene-wall); }
+  .bay-scene .box { animation: boxLoad 3.2s ease-in-out infinite; }
+  .bay-scene .box.b2 { animation-delay: 1.6s; }
+  @keyframes boxLoad {
+    0% { transform: translate(0,0); opacity:0; } 10% { opacity:1; }
+    70% { transform: translate(104px,0); opacity:1; }
+    85% { transform: translate(104px,6px); opacity:1; }
+    100% { transform: translate(104px,6px); opacity:0; }
+  }
+  .bay.chegando .bay-scene .box { animation-delay: calc(var(--d, 0s) + 1.5s); opacity:0; }
+  .bay.chegando .bay-scene .box.b2 { animation-delay: calc(var(--d, 0s) + 3.1s); }
+  .bay.atrasado .bay-scene .box, .bay.saindo .bay-scene .box { animation:none; opacity:0; }
+  .bay-scene .truck { animation: truckBump 1.8s ease-in-out infinite alternate; }
+  @keyframes truckBump { to { transform: translateY(-1px); } }
+  .bay.chegando .truck-in { animation: truckIn 1.4s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0s); }
+  @keyframes truckIn { from { transform: translateX(175px); } to { transform: translateX(0); } }
+  .bay.saindo .truck-in { animation: truckOut 1s ease-in forwards; }
+  @keyframes truckOut { to { transform: translateX(190px); } }
+  .bay-scene .haz-f { fill:#fdf1d6; } .bay-scene .haz-r { fill:#e24b4a; }
+  .bay.atrasado .bay-scene .haz { fill:#ffb020; animation: hazBlink 1s steps(2, start) infinite; }
+  @keyframes hazBlink { to { opacity:.12; } }
+  .bay-body { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; }
+  .bay-info { min-width:0; }
+  .bay-info b { font-size:16px; display:block; overflow-wrap:anywhere; }
+  .bay-info div { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .bay-info .obs-line { color:var(--text); }
+  .bay-status {
+    display:inline-flex; align-items:center; gap:5px; margin-top:8px !important; padding:3px 10px; border-radius:999px;
+    font-size:11px !important; font-weight:700; color:var(--st) !important;
+    background: color-mix(in srgb, var(--st) 14%, transparent);
+  }
+  .bay-side { display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; }
+  .ring { position:relative; width:68px; height:68px; }
+  .ring svg { transform: rotate(-90deg); display:block; }
+  .ring .trk { stroke: var(--card-border); }
+  .ring .prg { stroke: var(--st); transition: stroke-dashoffset 1s linear, stroke .3s ease; }
+  .ring span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .bay-side .btn { padding:9px 12px; font-size:12px; }
+  .bay-empty {
+    grid-column:1/-1; border:1.5px dashed var(--card-border); border-radius:18px; padding:26px;
+    text-align:center; color:var(--text-muted); font-size:13px;
+  }
+
+  /* ---------- Filtro Hoje / Mês dos finalizados ---------- */
+  .seg { display:inline-flex; background:var(--card); border:1px solid var(--card-border); border-radius:10px; padding:3px; }
+  .seg button { background:none; border:none; color:var(--text-muted); font:inherit; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; cursor:pointer; }
+  .seg button.active { background:var(--accent); color:#fff; }
+  .fin-tools { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .atraso-pendente { animation: pendPulse 1.8s ease-in-out infinite; }
+  @keyframes pendPulse { 50% { background: rgba(248,113,113,.28); } }
+
+  @media (max-width: 900px) { .kpi-strip { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+  @media (max-width: 700px) {
+    .kpi-strip { grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+    .bays { grid-template-columns:1fr; }
+    .header-logo { height:42px; width:88px; }
+  }
+
+  /* ---------- Layout compacto: 6 veículos numa tela só (telão / portaria) ---------- */
+  main { max-width:1760px; padding:16px 24px; }
+  header { padding:10px 24px; }
+  nav.tabs button { padding:10px 2px; }
+  .kpi-strip { gap:12px; }
+  .kpi-strip .card { padding:10px 16px; }
+  .kpi-strip .value { font-size:24px; margin-top:2px; }
+  .row { margin:14px 0; }
+  .section-title { margin:14px 0 10px; }
+  .bays { grid-template-columns:repeat(auto-fill, minmax(460px, 1fr)); gap:12px; }
+  .bay { display:grid; grid-template-columns:minmax(0, 40%) minmax(0, 1fr); border-top:4px solid var(--st); border-radius:14px; }
+  .bay.atrasado { border-top-color: var(--red); }
+  .bay-scene { height:100%; min-height:86px; }
+  .bay-scene .sc-bar { display:none; }
+  .bay-body { padding:8px 12px; gap:10px; }
+  .bay-info b { font-size:15px; }
+  .bay-status { margin-top:5px !important; padding:2px 9px; }
+  .bay-side { gap:5px; }
+  .ring, .ring svg { width:54px; height:54px; }
+  .ring span { font-size:12px; }
+  .bay-side .btn { padding:6px 10px; font-size:11px; }
+  @media (max-width: 700px) {
+    main { padding:14px; }
+    .bays { grid-template-columns:1fr; }
+    .bay { grid-template-columns:minmax(0, 36%) minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bay, .bay-scene *, .kpi-bump, .atraso-pendente { animation:none !important; }
+    .bay.atrasado .bay-scene .box, .bay.saindo .bay-scene .box { opacity:0; }
+  }
 </style>
 </head>
 <body>
@@ -278,14 +431,31 @@
   <main>
     <!-- ========== ABA OPERAÇÃO ========== -->
     <section id="painelOperacao">
-      <div class="grid-2">
+      <div class="kpi-strip">
         <div class="card">
           <div class="label">No CD agora</div>
           <div class="value" id="kpiNoCd" style="color:var(--accent)">0</div>
+          <div class="sub">veículos na doca</div>
         </div>
         <div class="card">
           <div class="label">Atendidos hoje</div>
           <div class="value" id="kpiHoje">0</div>
+          <div class="sub">saídas registradas</div>
+        </div>
+        <div class="card" id="cardMaiorEspera">
+          <div class="label">Maior espera agora</div>
+          <div class="value" id="kpiMaiorEspera">-</div>
+          <div class="sub" id="kpiMaiorEsperaNome"></div>
+        </div>
+        <div class="card" id="cardAtrasados">
+          <div class="label">Atrasados agora</div>
+          <div class="value" id="kpiAtrasadosAgora">0</div>
+          <div class="sub">acima de <span data-limite-atraso>60</span> min</div>
+        </div>
+        <div class="card">
+          <div class="label">Tempo médio hoje</div>
+          <div class="value" id="kpiMedioHoje">-</div>
+          <div class="sub">dos atendidos hoje</div>
         </div>
       </div>
 
@@ -295,7 +465,7 @@
       </div>
 
       <div class="section-title">Em atendimento <span class="badge-count" id="countAtivos">0</span></div>
-      <div id="listaAtivos"></div>
+      <div id="listaAtivos" class="bays"></div>
 
       <div id="painelMasterAtrasos" class="card master-box hidden" style="margin-top:20px;">
         <div class="master-head">
@@ -313,7 +483,13 @@
 
       <div class="section-title" style="justify-content: space-between;">
         <div style="display:flex; align-items:center; gap:10px;">Finalizados <span class="badge-count" id="countFinalizados">0</span></div>
-        <input type="text" id="buscaFinalizados" placeholder="Buscar por nome/placa ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
+        <div class="fin-tools">
+          <div class="seg">
+            <button type="button" id="finHojeBtn" class="active" onclick="definirPeriodoFinalizados('hoje')">Hoje</button>
+            <button type="button" id="finMesBtn" onclick="definirPeriodoFinalizados('mes')">Mês</button>
+          </div>
+          <input type="text" id="buscaFinalizados" placeholder="Buscar por nome/placa ou pedido..." style="max-width:280px;" oninput="renderFinalizados()">
+        </div>
       </div>
       <div class="table-wrap">
         <table class="finalizados-table">
@@ -347,10 +523,12 @@
         <div class="card"><div class="label">Atendidos no período</div><div class="value" id="kpiTotal">0</div></div>
         <div class="card"><div class="label">No CD agora</div><div class="value" id="kpiAtual">0</div></div>
         <div class="card"><div class="label">Tempo médio</div><div class="value" id="kpiMedio">-</div></div>
+        <div class="card"><div class="label">Tempo mediano</div><div class="value" id="kpiMediana">-</div></div>
         <div class="card"><div class="label">Maior tempo</div><div class="value" id="kpiMaior">-</div></div>
         <div class="card"><div class="label">Menor tempo</div><div class="value" id="kpiMenor">-</div></div>
         <div class="card"><div class="label">Tempo médio diário</div><div class="value" id="kpiMedioDia">-</div></div>
         <div class="card"><div class="label">Média clientes/dia</div><div class="value" id="kpiClientesDia">-</div></div>
+        <div class="card"><div class="label">Fora do padrão (8h+)</div><div class="value" id="kpiForaPadrao">0</div></div>
       </div>
 
       <div class="card chart-card" style="margin-top:20px;">
@@ -636,6 +814,8 @@ function logout() {
   clearInterval(pollInterval);
   clearInterval(cronometroInterval);
   relogioAtivo = false;
+  idsAtivosVistos = null;
+  assinaturaAtivos = null;
   document.getElementById('app').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
 }
@@ -705,48 +885,147 @@ function montarFiltroMes() {
 }
 
 // ================== RENDER: OPERAÇÃO ==================
+const RING_C = 2 * Math.PI * 28;
+let idsAtivosVistos = null;   // ids já desenhados (para animar só quem acabou de chegar)
+let assinaturaAtivos = null;  // evita redesenhar (e reiniciar animações) quando nada mudou
+
+function cenaDoca() {
+  return `<svg class="bay-scene" viewBox="0 0 300 92" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Veículo recebendo mercadoria na doca">
+    <rect class="sc-wall" x="0" y="8" width="44" height="52" rx="3"/>
+    <rect x="6" y="18" width="32" height="42" fill="#33404c"/>
+    <rect x="10" y="40" width="12" height="10" fill="#ef9f27"/><rect x="24" y="40" width="12" height="10" fill="#ba7517"/><rect x="17" y="30" width="12" height="10" fill="#fac775"/>
+    <rect class="sc-wall" x="0" y="60" width="150" height="6"/>
+    <rect class="sc-dock" x="0" y="66" width="150" height="18"/>
+    <g class="sc-roller"><circle cx="60" cy="63" r="2"/><circle cx="76" cy="63" r="2"/><circle cx="92" cy="63" r="2"/><circle cx="108" cy="63" r="2"/><circle cx="124" cy="63" r="2"/><circle cx="140" cy="63" r="2"/></g>
+    <line class="sc-floor" x1="150" y1="84" x2="300" y2="84" stroke-width="1.5"/>
+    <rect class="box" x="56" y="46" width="14" height="13" rx="1.5" fill="#ef9f27" stroke="#854f0b" stroke-width="1"/>
+    <rect class="box b2" x="56" y="46" width="14" height="13" rx="1.5" fill="#fac775" stroke="#854f0b" stroke-width="1"/>
+    <g class="truck-in"><g class="truck">
+      <rect x="176" y="50" width="14" height="10" rx="1.5" fill="#ba7517"/>
+      <rect x="156" y="58" width="60" height="16" rx="2" fill="#1f6aa8"/>
+      <path d="M216 74V44q0-4 4-4h18q4 0 6 3l8 13h14q6 0 6 6v12z" fill="#1f6aa8"/>
+      <path d="M222 46h15l7 11h-22z" fill="#cfe3f5"/>
+      <rect x="150" y="70" width="128" height="5" rx="2" fill="#0b2f4f"/>
+      <circle cx="178" cy="77" r="8" fill="#20262c"/><circle cx="178" cy="77" r="3" fill="#b4b2a9"/>
+      <circle cx="250" cy="77" r="8" fill="#20262c"/><circle cx="250" cy="77" r="3" fill="#b4b2a9"/>
+      <circle class="haz haz-f" cx="274" cy="63" r="3"/>
+      <circle class="haz haz-r" cx="154" cy="63" r="3"/>
+    </g></g>
+    <rect class="sc-bar" x="0" y="0" width="300" height="4"/>
+  </svg>`;
+}
+
 function renderAtivos() {
   const busca = (document.getElementById('buscaInput').value || '').toLowerCase();
   const lista = ativos.filter(a =>
-    !busca || a.nome.toLowerCase().includes(busca) || String(a.pedido).toLowerCase().includes(busca)
+    !busca || String(a.nome).toLowerCase().includes(busca) || String(a.pedido).toLowerCase().includes(busca)
   );
-  const div = document.getElementById('listaAtivos');
   document.getElementById('countAtivos').textContent = ativos.length;
-  div.innerHTML = lista.map(a => `
-    <div class="list-item" data-entrada="${a.entrada}" data-id="${a.id}">
-      <div class="info">
-        <b>${escapeHtml(a.nome)}</b>
-        <div>Pedido ${escapeHtml(a.pedido)} · Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
-        ${a.observacao ? `<div class="obs-line">Obs: ${escapeHtml(a.observacao)}</div>` : ''}
-        <div class="atraso-label hidden" data-atraso>⚠ Atendimento atrasado — mais de ${LIMITE_ATRASO_MINUTOS} minutos</div>
+
+  const assinatura = busca + '|' + lista.map(a => a.id + '~' + (a.observacao || '')).join(',');
+  if (assinatura === assinaturaAtivos) { atualizarCronometros(); return; }
+  assinaturaAtivos = assinatura;
+
+  const vistos = idsAtivosVistos || new Set();
+  let novos = 0;
+  const div = document.getElementById('listaAtivos');
+  div.innerHTML = lista.map(a => {
+    const chegando = !vistos.has(a.id);
+    const atraso = chegando ? (novos++ * 0.18).toFixed(2) : 0;
+    return `
+    <div class="bay${chegando ? ' chegando' : ''}" style="--d:${atraso}s" data-entrada="${a.entrada}" data-id="${a.id}">
+      ${cenaDoca()}
+      <div class="bay-body">
+        <div class="bay-info">
+          <b>${escapeHtml(a.nome)}</b>
+          <div>Pedido ${escapeHtml(a.pedido)}</div>
+          <div>Entrou às ${horaCurta(a.entrada)} · ${escapeHtml(a.operadorEntrada||'')}</div>
+          ${a.observacao ? `<div class="obs-line">Obs: ${escapeHtml(a.observacao)}</div>` : ''}
+          <div class="bay-status" data-status>No prazo</div>
+        </div>
+        <div class="bay-side">
+          <div class="ring">
+            <svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true">
+              <circle class="trk" cx="34" cy="34" r="28" fill="none" stroke-width="6"/>
+              <circle class="prg" cx="34" cy="34" r="28" fill="none" stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="${RING_C.toFixed(1)}" stroke-dashoffset="${RING_C.toFixed(1)}" data-ring/>
+            </svg>
+            <span data-cron>0:00</span>
+          </div>
+          <button class="btn secondary" onclick="abrirModalSaida('${a.id}')">↩ Saída</button>
+        </div>
       </div>
-      <div style="display:flex; align-items:center;">
-        <span class="time-pill" data-cron>0min</span>
-        <button class="btn secondary" onclick="abrirModalSaida('${a.id}')">↩ Registrar Saída</button>
-      </div>
-    </div>
-  `).join('') || '<div style="color:var(--text-muted); font-size:13px;">Nenhum cliente encontrado.</div>';
+    </div>`;
+  }).join('') || `<div class="bay-empty">${ativos.length ? 'Nenhum cliente encontrado na busca.' : 'Doca livre — nenhum cliente em atendimento no momento.'}</div>`;
+
+  idsAtivosVistos = new Set(ativos.map(a => a.id));
   atualizarCronometros();
 }
+
+function setKpi(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const v = String(valor);
+  if (el.textContent === v) return;
+  el.textContent = v;
+  el.classList.remove('kpi-bump');
+  void el.offsetWidth;
+  el.classList.add('kpi-bump');
+}
+
+function formatarCronometro(ms) {
+  const totalSeg = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSeg / 3600);
+  const m = Math.floor((totalSeg % 3600) / 60);
+  const s = totalSeg % 60;
+  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function atualizarCronometros() {
-  document.querySelectorAll('#listaAtivos .list-item').forEach(el => {
-    const entrada = new Date(el.getAttribute('data-entrada'));
-    const decorridoMs = Date.now() - entrada.getTime();
-    const tempoValido = Number.isFinite(decorridoMs);
-    const min = tempoValido ? Math.max(0, Math.floor(decorridoMs / 60000)) : 0;
-    const atrasado = tempoValido && decorridoMs > LIMITE_ATRASO_MINUTOS * 60000;
+  const limiteMs = LIMITE_ATRASO_MINUTOS * 60000;
+  document.querySelectorAll('#listaAtivos .bay').forEach(el => {
+    const decorridoMs = Date.now() - new Date(el.getAttribute('data-entrada')).getTime();
+    const ms = Number.isFinite(decorridoMs) ? Math.max(0, decorridoMs) : 0;
+    const atrasado = ms > limiteMs;
+    const atencao = !atrasado && ms > limiteMs / 2;
     el.classList.toggle('atrasado', atrasado);
-    el.querySelector('[data-cron]').textContent = atrasado ? `⚠ ${min}min` : `${min}min`;
-    const avisoAtraso = el.querySelector('[data-atraso]');
-    if (avisoAtraso) avisoAtraso.classList.toggle('hidden', !atrasado);
+    el.classList.toggle('atencao', atencao);
+    el.querySelector('[data-cron]').textContent = formatarCronometro(ms);
+    el.querySelector('[data-ring]').setAttribute('stroke-dashoffset', (RING_C * (1 - Math.min(1, ms / limiteMs))).toFixed(1));
+    el.querySelector('[data-status]').textContent = atrasado
+      ? `⚠ Atrasado — mais de ${LIMITE_ATRASO_MINUTOS} min`
+      : (atencao ? 'Atenção — perto do limite' : 'No prazo');
   });
-  document.getElementById('kpiNoCd').textContent = ativos.length;
+
+  // Indicadores do momento: calculados sobre TODOS os ativos, não só os filtrados na busca.
+  let maiorMs = -1, maiorNome = '', atrasados = 0;
+  ativos.forEach(a => {
+    const ms = Date.now() - new Date(a.entrada).getTime();
+    if (!Number.isFinite(ms)) return;
+    if (ms > limiteMs) atrasados++;
+    if (ms > maiorMs) { maiorMs = ms; maiorNome = a.nome; }
+  });
+  setKpi('kpiNoCd', ativos.length);
+  setKpi('kpiAtrasadosAgora', atrasados);
+  document.getElementById('kpiMaiorEspera').textContent = maiorMs >= 0 ? formatarMin(Math.floor(maiorMs / 60000)) : '-';
+  document.getElementById('kpiMaiorEsperaNome').textContent = maiorMs >= 0 ? maiorNome : 'ninguém aguardando';
+  document.getElementById('cardAtrasados').classList.toggle('alerta', atrasados > 0);
+  document.getElementById('cardMaiorEspera').classList.toggle('alerta', maiorMs > limiteMs);
   document.getElementById('kpiAtual') && (document.getElementById('kpiAtual').textContent = ativos.length);
+}
+let periodoFinalizados = 'hoje'; // 'hoje' = saídas de hoje | 'mes' = mês selecionado inteiro
+function definirPeriodoFinalizados(periodo) {
+  periodoFinalizados = periodo;
+  document.getElementById('finHojeBtn').classList.toggle('active', periodo === 'hoje');
+  document.getElementById('finMesBtn').classList.toggle('active', periodo === 'mes');
+  renderFinalizados();
 }
 function renderFinalizados() {
   const busca = (document.getElementById('buscaFinalizados').value || '').toLowerCase();
+  const hoje = dataChaveLocal(new Date().toISOString());
   const lista = (finalizadosCache[mesSelecionado] || []).filter(f =>
-    !busca || f.nome.toLowerCase().includes(busca) || String(f.pedido).toLowerCase().includes(busca)
+    (periodoFinalizados !== 'hoje' || dataChaveLocal(f.saida) === hoje) &&
+    (!busca || String(f.nome).toLowerCase().includes(busca) || String(f.pedido).toLowerCase().includes(busca))
   ).sort((a,b) => new Date(b.saida || b.entrada) - new Date(a.saida || a.entrada));
 
   document.getElementById('countFinalizados').textContent = lista.length;
@@ -793,15 +1072,17 @@ function renderFinalizados() {
         </div>
       </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">Nenhum registro encontrado.</td></tr>';
+  }).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">${periodoFinalizados === 'hoje' && !busca ? 'Nenhuma saída registrada hoje. Use "Mês" para ver o mês inteiro.' : 'Nenhum registro encontrado.'}</td></tr>`;
 }
 
 function renderKpisOperacao() {
   // REGRA: "Atendidos hoje" = clientes que tiveram a SAÍDA registrada hoje.
   const hoje = dataChaveLocal(new Date().toISOString());
-  const finHoje = (finalizadosCache[mesSelecionado]||[]).filter(f => dataChaveLocal(f.saida) === hoje).length;
-  document.getElementById('kpiHoje').textContent = finHoje;
-  document.getElementById('kpiNoCd').textContent = ativos.length;
+  const finHoje = (finalizadosCache[mesSelecionado]||[]).filter(f => dataChaveLocal(f.saida) === hoje);
+  const minHoje = finHoje.map(f => Number(f.minutos)).filter(n => !isNaN(n));
+  setKpi('kpiHoje', finHoje.length);
+  setKpi('kpiNoCd', ativos.length);
+  document.getElementById('kpiMedioHoje').textContent = minHoje.length ? formatarMin(Math.round(minHoje.reduce((a,b)=>a+b,0)/minHoje.length)) : '-';
 }
 
 // ================== MODAL NOVO CLIENTE ==================
@@ -864,7 +1145,17 @@ async function confirmarSaida() {
   const observacao = document.getElementById('saidaObservacao').value.trim();
   const erroEl = document.getElementById('saidaErro');
   const resp = await chamarApi({ action: 'registrarSaida', id: saidaIdAtual, pin: operadorAtual.pin, tipoRetirada, nfSaida, observacao });
-  if (resp.ok) { fecharModalSaida(); carregarTudo(); }
+  if (resp.ok) {
+    fecharModalSaida();
+    // Animação de saída: o veículo deixa a doca antes de a lista ser atualizada.
+    const bay = document.querySelector(`#listaAtivos .bay[data-id="${saidaIdAtual}"]`);
+    if (bay) {
+      bay.classList.remove('chegando');
+      bay.classList.add('saindo');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    carregarTudo();
+  }
   else { erroEl.textContent = resp.erro || 'Erro ao registrar saída.'; erroEl.classList.remove('hidden'); }
 }
 
@@ -885,7 +1176,13 @@ function renderIndicadores() {
   document.getElementById('kpiTotal').textContent = lista.length;
   document.getElementById('kpiAtual').textContent = ativos.length;
   document.getElementById('kpiMedio').textContent = minutos.length ? formatarMin(Math.round(minutos.reduce((a,b)=>a+b,0)/minutos.length)) : '-';
-  document.getElementById('kpiMaior').textContent = minutos.length ? formatarMin(Math.max(...minutos)) : '-';
+  // Mediana: não é distorcida por saídas esquecidas (registros de muitas horas).
+  const ordenados = minutos.slice().sort((a,b) => a - b);
+  const meio = Math.floor(ordenados.length / 2);
+  const mediana = ordenados.length ? (ordenados.length % 2 ? ordenados[meio] : Math.round((ordenados[meio - 1] + ordenados[meio]) / 2)) : null;
+  document.getElementById('kpiMediana').textContent = mediana === null ? '-' : formatarMin(mediana);
+  document.getElementById('kpiForaPadrao').textContent = minutos.filter(n => n >= 480).length;
+  document.getElementById('kpiMaior').textContent =minutos.length ? formatarMin(Math.max(...minutos)) : '-';
   document.getElementById('kpiMenor').textContent = minutos.length ? formatarMin(Math.min(...minutos)) : '-';
 
   // Agrega por DATA DE SAÍDA: média de permanência + quantidade atendida.
@@ -928,13 +1225,14 @@ function renderGraficoPorUsuario(lista) {
   const saidas = usuarios.map(u => contagem[u].saidas);
 
   const opts = {
-    chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent' },
+    chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif' },
+    plotOptions: { bar: { columnWidth: '58%', borderRadius: 5, borderRadiusApplication: 'end' } },
     theme: { mode: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
     series: [{ name: 'Entradas', data: entradas }, { name: 'Saídas', data: saidas }],
     xaxis: { categories: usuarios },
     yaxis: { labels: { show: false } },
     grid: { show: false },
-    colors: ['#34d399', '#ff6a2b'],
+    colors: ['#2875b5', '#ef7d22'],
     dataLabels: { enabled: true, style: { fontSize: '11px', colors: ['#ffffff'] } },
     legend: { position: 'top' }
   };
@@ -958,14 +1256,14 @@ function renderGraficoPorDia(dias, medias, quantidades) {
       height: 330,
       toolbar: { show: false },
       background: 'transparent',
-      fontFamily: '-apple-system, Segoe UI, Roboto, Arial, sans-serif',
+      fontFamily: 'Inter, Segoe UI, Roboto, Arial, sans-serif',
       foreColor: texto
     },
     series: [
       { name: 'Tempo médio', type: 'column', data: medias },
       { name: 'Clientes atendidos', type: 'line', data: quantidades }
     ],
-    colors: ['#f05a24', '#2563eb'],
+    colors: ['#ef7d22', '#2875b5'],
     plotOptions: {
       bar: { columnWidth: '58%', borderRadius: 5, borderRadiusApplication: 'end' }
     },
